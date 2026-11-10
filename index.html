@@ -1,0 +1,3409 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <title>かけざん九九 れんしゅう</title>
+  <style>
+    :root {
+      --bg-color: #EFF6FF;
+      --card-bg: #FFFFFF;
+      --primary: #2563EB;
+      --primary-hover: #1D4ED8;
+      --accent: #F59E0B;
+      --success: #EF4444;
+      --wrong: #2563EB;
+      --text-main: #0F172A;
+      --text-sub: #334155;
+      --border-radius: 22px;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      font-family: "UD Digi Kyokasho N-R", "UD Digi Kyokasho NP-R", "BIZ UDPGothic", "Hiragino Maru Gothic ProN", "Yu Gothic UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      overflow-x: hidden;
+      font-weight: bold;
+    }
+
+    /* 常時表示ヘッダー（なりすまし・押し間違い防止） */
+    #top-user-bar {
+      display: none;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: #FEF08A;
+      border-bottom: 4px solid #F59E0B;
+      padding: 12px 20px;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    #top-user-bar .user-info-text {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: #78350F;
+    }
+
+    #top-user-bar .user-num-badge {
+      display: inline-block;
+      background: #EA580C;
+      color: #FFFFFF;
+      padding: 2px 16px;
+      border-radius: 999px;
+      font-size: 1.55rem;
+      margin: 0 6px;
+    }
+
+    .btn-back-top {
+      background: #FFFFFF;
+      color: #9A3412;
+      border: 3px solid #D97706;
+      border-radius: 14px;
+      padding: 10px 18px;
+      font-size: 1.15rem;
+      font-weight: 900;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    .btn-back-top:active {
+      transform: scale(0.96);
+    }
+
+    /* メインコンテナ */
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 20px 18px 36px;
+    }
+
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: 26px 24px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin-top: 0;
+      text-align: center;
+    }
+
+    .app-title {
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: #1E3A8A;
+      margin-bottom: 10px;
+    }
+
+    .sub-instruction {
+      text-align: center;
+      font-size: 1.3rem;
+      color: var(--text-sub);
+      margin-bottom: 20px;
+      font-weight: 900;
+    }
+
+    /* ステップ画面の上部ナビバー */
+    .step-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .selected-badge {
+      display: inline-block;
+      background: #DBEAFE;
+      border: 3px solid #2563EB;
+      color: #1E3A8A;
+      font-size: 1.45rem;
+      font-weight: 900;
+      padding: 8px 22px;
+      border-radius: 999px;
+    }
+
+    /* ① ログイン画面（1〜40グリッド） */
+    .number-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 680px) {
+      .number-grid {
+        grid-template-columns: repeat(5, 1fr);
+      }
+    }
+
+    .num-btn {
+      background: #FFFFFF;
+      border: 3px solid #93C5FD;
+      border-radius: 14px;
+      padding: 15px 4px;
+      font-size: 1.55rem;
+      font-weight: 900;
+      color: #1E3A8A;
+      cursor: pointer;
+      transition: all 0.12s;
+      text-align: center;
+    }
+
+    .num-btn:hover {
+      background: #EFF6FF;
+    }
+
+    .num-btn.selected {
+      background: #2563EB;
+      color: #FFFFFF;
+      border-color: #1E40AF;
+      transform: scale(1.06);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+    }
+
+    .btn-primary-large {
+      display: block;
+      width: 100%;
+      max-width: 440px;
+      margin: 0 auto;
+      padding: 20px;
+      font-size: 1.75rem;
+      font-weight: 900;
+      color: #FFFFFF;
+      background: #16A34A;
+      border: 4px solid #15803D;
+      border-radius: 999px;
+      cursor: pointer;
+      box-shadow: 0 6px 0 #15803D;
+      transition: all 0.1s;
+    }
+
+    .btn-primary-large:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 #15803D;
+    }
+
+    .btn-primary-large:disabled {
+      background: #CBD5E1;
+      border-color: #94A3B8;
+      box-shadow: none;
+      color: #64748B;
+      cursor: not-allowed;
+    }
+
+    /* ②-1 ステップ1：段のせんたく（3段階カラー ＆ 4モードバッジ ＆ 特別モード2種） */
+    .dan-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 720px) {
+      .dan-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    /* 段ボタン基本（0個クリア＝未合格：白背景・グレー枠） */
+    .dan-btn {
+      position: relative;
+      background: #FFFFFF;
+      border: 4px solid #CBD5E1;
+      border-radius: 20px;
+      padding: 18px 10px 14px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 6px 0 #CBD5E1;
+      transition: transform 0.12s, box-shadow 0.12s;
+      min-height: 158px;
+    }
+
+    .dan-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .dan-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 2px 0 #CBD5E1;
+    }
+
+    /* 1〜3個クリアした段（一部合格）：明るいパステルイエロー背景＋オレンジ枠 */
+    .dan-btn.dan-partial {
+      background: #FEF9C3;
+      border: 4px solid #F59E0B;
+      box-shadow: 0 6px 0 #D97706;
+    }
+
+    /* 4つすべてクリアした段（完全合格）：ゴールドグラデーション＋キラキラ太枠 */
+    .dan-btn.dan-master {
+      background: linear-gradient(135deg, #FEF08A 0%, #FDE047 45%, #F59E0B 100%);
+      border: 5px solid #B45309;
+      box-shadow: 0 6px 0 #92400E, 0 0 22px rgba(245, 158, 11, 0.55);
+    }
+
+    .dan-btn .dan-label {
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: #0F172A;
+      margin-top: 2px;
+      margin-bottom: 4px;
+    }
+
+    .dan-btn.dan-master .dan-label {
+      color: #78350F;
+    }
+
+    .dan-sub-status {
+      font-size: 1rem;
+      font-weight: 900;
+      margin-bottom: 8px;
+      padding: 2px 10px;
+      border-radius: 999px;
+    }
+
+    .dan-sub-status.none {
+      color: #64748B;
+      background: #F1F5F9;
+    }
+
+    .dan-sub-status.partial {
+      color: #B45309;
+      background: #FDE68A;
+    }
+
+    .dan-sub-status.master {
+      color: #FFFFFF;
+      background: #DC2626;
+    }
+
+    /* 右上に大きく重ねるスタンプバッジ */
+    .dan-corner-stamp {
+      position: absolute;
+      top: -14px;
+      right: -12px;
+      min-width: 52px;
+      height: 52px;
+      padding: 0 10px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      font-weight: 900;
+      background: #FFFFFF;
+      border: 4px solid #EF4444;
+      color: #EF4444;
+      box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+      z-index: 2;
+    }
+
+    .dan-corner-stamp.stamp-master-badge {
+      background: #DC2626;
+      border-color: #FEF08A;
+      color: #FEF08A;
+      font-size: 1.95rem;
+      min-width: 56px;
+      height: 56px;
+      box-shadow: 0 4px 14px rgba(220, 38, 38, 0.5);
+    }
+
+    /* ボタン内下部の4つのモード別クリアバッジ [じゅんばん][ぎゃく][ばらばら][とおし] */
+    .dan-mini-modes {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      width: 100%;
+      margin-top: auto;
+    }
+
+    .mini-mode-pill {
+      font-size: 0.72rem;
+      font-weight: 900;
+      padding: 5px 1px;
+      border-radius: 8px;
+      text-align: center;
+      background: #F1F5F9;
+      color: #94A3B8;
+      border: 2px solid #E2E8F0;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .mini-mode-pill.cleared {
+      background: #EF4444;
+      color: #FFFFFF;
+      border-color: #DC2626;
+    }
+
+    /* 特別モード2つ（にがて とっくん ＆ ぜんぶ ばらばら） */
+    .special-modes-section {
+      margin-top: 28px;
+      padding-top: 22px;
+      border-top: 4px dashed #CBD5E1;
+    }
+
+    .special-modes-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 680px) {
+      .special-modes-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .special-btn {
+      position: relative;
+      border-radius: 22px;
+      padding: 22px 18px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      transition: transform 0.12s, box-shadow 0.12s;
+      min-height: 132px;
+    }
+
+    .special-btn:active:not(:disabled) {
+      transform: translateY(4px);
+    }
+
+    /* にがて とっくん ボタン */
+    .special-btn.nigate-btn {
+      background: linear-gradient(135deg, #FFF1F2, #FFE4E6);
+      border: 4px solid #F43F5E;
+      box-shadow: 0 6px 0 #E11D48;
+      color: #881337;
+    }
+
+    .special-btn.nigate-btn:disabled {
+      background: #F8FAFC;
+      border: 4px solid #CBD5E1;
+      box-shadow: none;
+      color: #64748B;
+      cursor: not-allowed;
+    }
+
+    /* ぜんぶ ばらばら ボタン（アンロック時：ゴールド特別デザイン） */
+    .special-btn.zenbu-btn {
+      background: linear-gradient(135deg, #FEF08A 0%, #FDE047 50%, #F59E0B 100%);
+      border: 5px solid #B45309;
+      box-shadow: 0 6px 0 #92400E, 0 0 20px rgba(245, 158, 11, 0.5);
+      color: #78350F;
+    }
+
+    /* ぜんぶ ばらばら ボタン（ロック時：グレーアウト） */
+    .special-btn.zenbu-btn:disabled {
+      background: #E2E8F0;
+      border: 4px solid #94A3B8;
+      box-shadow: none;
+      color: #475569;
+      cursor: not-allowed;
+    }
+
+    .special-btn-title {
+      font-size: 1.65rem;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .special-btn-sub {
+      font-size: 1.1rem;
+      font-weight: 900;
+      padding: 4px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.85);
+    }
+
+    /* ②-2 ステップ2：やり方のせんたく（ごうかく！／ちょうせん！バッジ付き） */
+    .mode-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 22px;
+      margin-top: 16px;
+    }
+
+    @media (max-width: 640px) {
+      .mode-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .mode-btn {
+      position: relative;
+      background: #FFFFFF;
+      border: 4px solid #94A3B8;
+      border-radius: 22px;
+      padding: 28px 20px 22px;
+      cursor: pointer;
+      text-align: left;
+      box-shadow: 0 6px 0 #64748B;
+      transition: all 0.1s;
+    }
+
+    .mode-btn:hover {
+      background: #F8FAFC;
+      transform: translateY(-2px);
+    }
+
+    .mode-btn:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 #64748B;
+    }
+
+    /* 合格済みのやり方ボタン：明るい背景＋赤枠 */
+    .mode-btn.mode-cleared {
+      background: #FEF2F2;
+      border-color: #EF4444;
+      box-shadow: 0 6px 0 #DC2626;
+    }
+
+    .mode-btn .mode-title {
+      font-size: 1.75rem;
+      font-weight: 900;
+      color: #0F172A;
+      margin-bottom: 8px;
+    }
+
+    .mode-btn.mode-cleared .mode-title {
+      color: #991B1B;
+    }
+
+    .mode-btn .mode-desc {
+      font-size: 1.15rem;
+      color: #334155;
+      font-weight: bold;
+    }
+
+    /* やり方ボタン右上の「ごうかく！」／「ちょうせん！」バッジ */
+    .mode-status-badge {
+      position: absolute;
+      top: -14px;
+      right: 14px;
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-size: 1.15rem;
+      font-weight: 900;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+    }
+
+    .mode-status-badge.passed {
+      background: #EF4444;
+      color: #FFFFFF;
+      border: 3px solid #FEF08A;
+      font-size: 1.25rem;
+    }
+
+    .mode-status-badge.challenge {
+      background: #2563EB;
+      color: #FFFFFF;
+      border: 3px solid #DBEAFE;
+    }
+
+    /* ②-3 ステップ3：よみがなの せんたく */
+    .yomigana-step-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    @media (max-width: 600px) {
+      .yomigana-step-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .yomigana-step-btn {
+      background: #FFFFFF;
+      border: 5px solid #16A34A;
+      border-radius: 22px;
+      padding: 38px 20px;
+      font-size: 2rem;
+      font-weight: 900;
+      color: #14532D;
+      cursor: pointer;
+      text-align: center;
+      box-shadow: 0 7px 0 #15803D;
+      transition: all 0.1s;
+    }
+
+    .yomigana-step-btn.no-yomi {
+      border-color: #2563EB;
+      color: #1E3A8A;
+      box-shadow: 0 7px 0 #1D4ED8;
+    }
+
+    .yomigana-step-btn:hover {
+      background: #F0FDF4;
+    }
+
+    .yomigana-step-btn.no-yomi:hover {
+      background: #EFF6FF;
+    }
+
+    .yomigana-step-btn:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 #15803D;
+    }
+
+    /* ③-A 1問ずつ練習画面 */
+    .practice-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: #1E293B;
+    }
+
+    .question-box {
+      background: #FFFBEB;
+      border: 5px solid #F59E0B;
+      border-radius: 24px;
+      padding: 26px 16px;
+      text-align: center;
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .question-yomigana {
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: #B45309;
+      margin-bottom: 8px;
+      letter-spacing: 3px;
+      min-height: 2.6rem;
+    }
+
+    .question-formula {
+      font-size: 4.4rem;
+      font-weight: 900;
+      letter-spacing: 2px;
+      color: #0F172A;
+      line-height: 1.15;
+    }
+
+    .question-answer-slot {
+      display: inline-block;
+      min-width: 100px;
+      padding: 0 14px;
+      border-bottom: 7px solid #2563EB;
+      color: #2563EB;
+    }
+
+    /* 自動マイク聞き取り中インジケーター */
+    .mic-auto-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      max-width: 580px;
+      margin: 12px auto;
+      padding: 14px 24px;
+      border-radius: 999px;
+      background: #FEF2F2;
+      border: 4px solid #EF4444;
+      color: #B91C1C;
+      font-size: 1.4rem;
+      font-weight: 900;
+      transition: all 0.2s;
+    }
+
+    .mic-auto-indicator.listening {
+      box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.2);
+      animation: pulseMicBox 1s infinite alternate;
+    }
+
+    .mic-auto-indicator.off {
+      background: #F1F5F9;
+      border-color: #CBD5E1;
+      color: #475569;
+      box-shadow: none;
+      animation: none;
+    }
+
+    .mic-waves {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      height: 24px;
+    }
+
+    .mic-waves span {
+      display: inline-block;
+      width: 5px;
+      height: 10px;
+      background: #EF4444;
+      border-radius: 4px;
+    }
+
+    .mic-auto-indicator.listening .mic-waves span:nth-child(1) {
+      animation: waveBar 0.5s infinite ease-in-out 0s;
+    }
+
+    .mic-auto-indicator.listening .mic-waves span:nth-child(2) {
+      animation: waveBar 0.5s infinite ease-in-out 0.15s;
+    }
+
+    .mic-auto-indicator.listening .mic-waves span:nth-child(3) {
+      animation: waveBar 0.5s infinite ease-in-out 0.3s;
+    }
+
+    @keyframes waveBar {
+
+      0%,
+      100% {
+        height: 8px;
+      }
+
+      50% {
+        height: 24px;
+      }
+    }
+
+    @keyframes pulseMicBox {
+      from {
+        transform: scale(1);
+      }
+
+      to {
+        transform: scale(1.02);
+      }
+    }
+
+    .status-message {
+      min-height: 52px;
+      margin: 12px 0;
+      padding: 12px 16px;
+      border-radius: 14px;
+      font-size: 1.35rem;
+      font-weight: 900;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .status-message.retry {
+      background: #FEF3C7;
+      color: #92400E;
+      border: 3px solid #F59E0B;
+    }
+
+    .status-message.wrong {
+      background: #FEE2E2;
+      color: #991B1B;
+      border: 3px solid #EF4444;
+    }
+
+    .status-message.info {
+      background: #DBEAFE;
+      color: #1E3A8A;
+    }
+
+    /* テンキー（初期は非表示・2回聞き取れなかった時だけ出現） */
+    .tenkey-area {
+      display: none;
+      background: #FFFBEB;
+      border: 4px solid #F59E0B;
+      border-radius: 20px;
+      padding: 16px;
+      max-width: 540px;
+      margin: 14px auto 0;
+      animation: popScale 0.25s ease-out;
+    }
+
+    .tenkey-title {
+      text-align: center;
+      font-size: 1.25rem;
+      font-weight: 900;
+      color: #92400E;
+      margin-bottom: 10px;
+    }
+
+    .tenkey-preview-box {
+      text-align: center;
+      font-size: 1.9rem;
+      font-weight: 900;
+      color: #2563EB;
+      background: #FFFFFF;
+      border: 3px solid #93C5FD;
+      border-radius: 12px;
+      padding: 6px 12px;
+      margin-bottom: 10px;
+      min-height: 50px;
+    }
+
+    .tenkey-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .key-btn {
+      background: #FFFFFF;
+      border: 3px solid #94A3B8;
+      border-radius: 14px;
+      padding: 14px 0;
+      font-size: 1.7rem;
+      font-weight: 900;
+      color: #0F172A;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #94A3B8;
+    }
+
+    .key-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #94A3B8;
+    }
+
+    .tenkey-actions {
+      display: grid;
+      grid-template-columns: 1fr 1.5fr 1fr;
+      gap: 10px;
+    }
+
+    .btn-clear {
+      background: #F1F5F9;
+      border: 3px solid #64748B;
+      border-radius: 14px;
+      padding: 14px;
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: #1E293B;
+      cursor: pointer;
+    }
+
+    .btn-submit-key {
+      background: #2563EB;
+      border: 3px solid #1D4ED8;
+      border-radius: 14px;
+      padding: 14px;
+      font-size: 1.45rem;
+      font-weight: 900;
+      color: #FFFFFF;
+      cursor: pointer;
+    }
+
+    .btn-pass {
+      background: #FFF7ED;
+      border: 3px solid #EA580C;
+      border-radius: 14px;
+      padding: 14px 6px;
+      font-size: 1.15rem;
+      font-weight: 900;
+      color: #9A3412;
+      cursor: pointer;
+    }
+
+    .btn-next-after-wrong {
+      display: none;
+      width: 100%;
+      max-width: 420px;
+      margin: 14px auto 0;
+      padding: 18px;
+      font-size: 1.6rem;
+      font-weight: 900;
+      background: #2563EB;
+      color: #FFFFFF;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      box-shadow: 0 5px 0 #1D4ED8;
+    }
+
+    /* マイク再開ボタン（マイク停止時にいつでもワンタップで再開可能） */
+    .btn-retry-mic {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: #EF4444;
+      color: #FFFFFF;
+      border: 3px solid #B91C1C;
+      border-radius: 999px;
+      padding: 10px 20px;
+      font-size: 1.15rem;
+      font-weight: 900;
+      cursor: pointer;
+      margin: 0 auto 12px;
+      box-shadow: 0 4px 0 #B91C1C;
+    }
+
+    .btn-retry-mic:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #B91C1C;
+    }
+
+    /* ③-B 連続暗唱モード（「とおし」） */
+    .tooshi-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 740px;
+      margin: 0 auto;
+    }
+
+    .tooshi-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #FFFFFF;
+      border: 3px solid #CBD5E1;
+      border-radius: 16px;
+      padding: 10px 18px;
+      transition: all 0.15s;
+    }
+
+    .tooshi-row.current {
+      background: #FEF9C3;
+      border: 4px solid #EAB308;
+      box-shadow: 0 0 0 4px rgba(234, 179, 8, 0.25);
+      transform: scale(1.015);
+    }
+
+    .tooshi-row.done {
+      background: #FEF2F2;
+      border-color: #FCA5A5;
+    }
+
+    .tooshi-row.wrong-done {
+      background: #EFF6FF;
+      border-color: #93C5FD;
+    }
+
+    .tooshi-left {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .tooshi-formula {
+      font-size: 1.85rem;
+      font-weight: 900;
+      color: #0F172A;
+    }
+
+    .tooshi-yomi {
+      font-size: 1.35rem;
+      font-weight: 900;
+      color: #B45309;
+    }
+
+    .tooshi-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .tooshi-guide-badge {
+      background: #EA580C;
+      color: #FFFFFF;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 1.05rem;
+      font-weight: 900;
+      animation: pulseBadge 0.8s infinite alternate;
+    }
+
+    @keyframes pulseBadge {
+      from {
+        opacity: 1;
+      }
+
+      to {
+        opacity: 0.7;
+      }
+    }
+
+    .tooshi-mark {
+      font-size: 2rem;
+      font-weight: 900;
+      color: #EF4444;
+      min-width: 44px;
+      text-align: center;
+    }
+
+    /* 大きな「〇」「✖」オーバーレイ演出（完全無音・視覚のみ） */
+    #feedback-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.35);
+      pointer-events: none;
+    }
+
+    .big-maru {
+      width: 250px;
+      height: 250px;
+      border: 28px solid #EF4444;
+      border-radius: 50%;
+      box-shadow: 0 8px 25px rgba(239, 68, 68, 0.35);
+      animation: popScale 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .big-batsu {
+      font-size: 15rem;
+      font-weight: 900;
+      color: #2563EB;
+      line-height: 1;
+      text-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
+      animation: popScale 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes popScale {
+      0% {
+        transform: scale(0.3);
+        opacity: 0;
+      }
+
+      80% {
+        transform: scale(1.08);
+        opacity: 1;
+      }
+
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    /* ④ 結果画面（全問正解＝紙吹雪＆特大ごうかく！はなまる ／ 不合格＝おしい！あと〇もん！） */
+    #confetti-container {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 400;
+      overflow: hidden;
+      display: none;
+    }
+
+    .confetti-piece {
+      position: absolute;
+      top: -20px;
+      width: 14px;
+      height: 24px;
+      border-radius: 4px;
+      opacity: 0.9;
+      animation: confettiFall linear forwards;
+    }
+
+    @keyframes confettiFall {
+      0% {
+        transform: translateY(-20px) rotate(0deg);
+        opacity: 1;
+      }
+
+      100% {
+        transform: translateY(105vh) rotate(720deg);
+        opacity: 0.2;
+      }
+    }
+
+    .result-pass-banner {
+      background: linear-gradient(135deg, #FEF2F2, #FEF9C3);
+      border: 5px solid #EF4444;
+      border-radius: 24px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 16px;
+      box-shadow: 0 8px 20px rgba(239, 68, 68, 0.2);
+    }
+
+    .result-pass-title {
+      font-size: 2.7rem;
+      font-weight: 900;
+      color: #DC2626;
+      margin: 0;
+      letter-spacing: 2px;
+    }
+
+    .result-fail-banner {
+      background: #EFF6FF;
+      border: 5px solid #3B82F6;
+      border-radius: 24px;
+      padding: 24px 18px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .result-fail-title {
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: #1D4ED8;
+      margin: 0;
+    }
+
+    .hanamaru-box {
+      text-align: center;
+      margin: 12px 0;
+    }
+
+    .hanamaru-svg {
+      width: 220px;
+      height: 220px;
+      animation: rotatePop 0.7s ease-out;
+    }
+
+    @keyframes rotatePop {
+      0% {
+        transform: scale(0.2) rotate(-30deg);
+        opacity: 0;
+      }
+
+      80% {
+        transform: scale(1.1) rotate(5deg);
+        opacity: 1;
+      }
+
+      100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+      }
+    }
+
+    .result-score {
+      font-size: 2.2rem;
+      font-weight: 900;
+      text-align: center;
+      color: #0F172A;
+      margin: 12px 0;
+    }
+
+    .save-status-box {
+      text-align: center;
+      margin: 16px 0;
+      padding: 14px;
+      border-radius: 14px;
+      font-size: 1.25rem;
+      font-weight: 900;
+    }
+
+    .btn-retry-send {
+      background: #EA580C;
+      color: #FFFFFF;
+      border: none;
+      border-radius: 999px;
+      padding: 16px 32px;
+      font-size: 1.4rem;
+      font-weight: 900;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- 常時表示ヘッダー（ログイン中のみ表示） -->
+  <header id="top-user-bar">
+    <div class="user-info-text">
+      いま <span id="header-student-num" class="user-num-badge">--</span> ばん の人が つかっています
+    </div>
+    <button type="button" class="btn-back-top" onclick="confirmSwitchStudent()">
+      ちがうときは もどる
+    </button>
+  </header>
+
+  <!-- 視覚フィードバック用オーバーレイ（無音） -->
+  <div id="feedback-overlay"></div>
+
+  <!-- 紙吹雪アニメーション用コンテナ（全問正解時） -->
+  <div id="confetti-container"></div>
+
+  <div class="container">
+
+    <!-- ① ログイン画面 -->
+    <section id="screen-login" class="screen active">
+      <div class="card">
+        <h1 class="app-title">かけざん九九 れんしゅう</h1>
+        <p class="sub-instruction">じぶんの ばんごう を おして、「はじめる」を おしてね</p>
+        <div id="login-number-grid" class="number-grid"></div>
+        <button id="btn-login-start" type="button" class="btn-primary-large" disabled onclick="loginAndLoadProgress()">
+          はじめる
+        </button>
+      </div>
+    </section>
+
+    <!-- ②-1 ステップ1：段のせんたく ＆ 特別モード（にがて とっくん ／ ぜんぶ ばらばら） -->
+    <section id="screen-step1-dan" class="screen">
+      <div class="card">
+        <div class="step-header">
+          <button type="button" class="btn-back-top" onclick="confirmSwitchStudent()">← ばんごう えらび に もどる</button>
+          <span></span>
+        </div>
+
+        <h2 style="font-size:2rem; color:#1E3A8A; margin-bottom:18px;">どの だん を する？</h2>
+
+        <div id="dan-select-grid" class="dan-grid"></div>
+
+        <!-- 特別モード2つ（1の段〜9の段の下に配置） -->
+        <div class="special-modes-section">
+          <h3 style="font-size:1.6rem; color:#1E3A8A; margin-bottom:14px;">とくべつ コース</h3>
+          <div class="special-modes-grid">
+            <!-- にがて とっくん ボタン -->
+            <button id="btn-special-nigate" type="button" class="special-btn nigate-btn"
+              onclick="selectSpecialMode('にがて とっくん')">
+              <div class="special-btn-title">🔥 にがて とっくん</div>
+              <div id="nigate-btn-sub" class="special-btn-sub">まちがえた もんだい を れんしゅう</div>
+            </button>
+
+            <!-- ぜんぶ ばらばら ボタン（全9段が金色のときのみアンロック） -->
+            <button id="btn-special-zenbu" type="button" class="special-btn zenbu-btn" disabled
+              onclick="selectSpecialMode('ぜんぶ ばらばら')">
+              <div id="zenbu-btn-title" class="special-btn-title">🔒 ぜんぶ ばらばら</div>
+              <div id="zenbu-btn-sub" class="special-btn-sub">ぜんぶ 金色に すると あそべるよ！</div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ②-2 ステップ2：やり方のせんたく -->
+    <section id="screen-step2-mode" class="screen">
+      <div class="card">
+        <div class="step-header">
+          <button type="button" class="btn-back-top" onclick="goStep1Dan()">← もどる</button>
+          <span id="step2-dan-badge" class="selected-badge">2のだん</span>
+        </div>
+        <h2 style="font-size:2rem; color:#1E3A8A; margin-bottom:20px;">どの やり方 で する？</h2>
+        <div id="mode-select-grid" class="mode-grid"></div>
+      </div>
+    </section>
+
+    <!-- ②-3 ステップ3：よみがなの せんたく -->
+    <section id="screen-step3-yomi" class="screen">
+      <div class="card">
+        <div class="step-header">
+          <button type="button" class="btn-back-top" onclick="goBackFromStep3()">← もどる</button>
+          <span id="step3-summary-badge" class="selected-badge">2のだん（じゅんばん）</span>
+        </div>
+        <h2 style="font-size:2rem; color:#1E3A8A;">よみがな（にいち が など）を つける？</h2>
+        <div class="yomigana-step-grid">
+          <button type="button" class="yomigana-step-btn" onclick="chooseYomiganaAndStart(true)">
+            よみがな あり
+          </button>
+          <button type="button" class="yomigana-step-btn no-yomi" onclick="chooseYomiganaAndStart(false)">
+            よみがな なし
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ③-A 1問ずつ練習画面（じゅんばん・ぎゃく・ばらばら・にがて とっくん・ぜんぶ ばらばら ※「きこえたことば」表示は完全非表示） -->
+    <section id="screen-single" class="screen">
+      <div class="card">
+        <div class="practice-header">
+          <span id="single-mode-label">2のだん（じゅんばん）</span>
+          <span id="single-progress-label">1 / 9 もんめ</span>
+          <button type="button" class="btn-back-top" onclick="goStep1Dan()">やめて もどる</button>
+        </div>
+
+        <div class="question-box">
+          <!-- よみがな表示（ありのときだけ KUKU_MASTER の qRead を表示） -->
+          <div id="q-yomigana" class="question-yomigana">にいち が</div>
+          <div class="question-formula">
+            <span id="q-dan">2</span> × <span id="q-mul">1</span> = <span id="q-ans-slot"
+              class="question-answer-slot">?</span>
+          </div>
+        </div>
+
+        <!-- 自動マイク稼働アニメーション表示 -->
+        <div id="single-mic-indicator" class="mic-auto-indicator listening">
+          <div class="mic-waves"><span></span><span></span><span></span></div>
+          <span id="single-mic-text">きいています… こえにだして いってね</span>
+        </div>
+
+        <div id="single-status-msg" class="status-message info">
+          そのまま こえに 出して こたえてね
+        </div>
+
+        <button id="btn-single-next" type="button" class="btn-next-after-wrong" onclick="goNextSingleQuestion()">
+          つぎへ すすむ ➔
+        </button>
+
+        <!-- テンキー（通常時は非表示。2回連続で聞き取れなかった時のみ自動出現） -->
+        <div id="single-tenkey-container" class="tenkey-area">
+          <div style="text-align:center;">
+            <button type="button" class="btn-retry-mic" onclick="retrySingleMicrophone()">
+              🎤 マイクを もういちど つかう
+            </button>
+          </div>
+          <div class="tenkey-title">または すうじボタンで こたえてね</div>
+          <div class="tenkey-grid">
+            <button type="button" class="key-btn" onclick="pressSingleNumKey('1')">1</button>
+            <button type="button" class="key-btn" onclick="pressSingleNumKey('2')">2</button>
+            <button type="button" class="key-btn" onclick="pressSingleNumKey('3')">3</button>
+            <button type="button" class="key-btn" onclick="pressSingleNumKey('4')">4</button>
+            <button type="button" class="key-btn" onclick="pressSingleNumKey('5')">5</button>
+            <button type="button" class="key-btn" onclick="pressSingleNumKey('6')">6</button>
+            <button type="button" class="key-btn" onclick="pressSingleNumKey('7')">7</button>
+            <button type="button" class="key-btn" onclick="pressSingleNumKey('8')">8</button>
+            <button type="button" class="key-btn" onclick="pressSingleNumKey('9')">9</button>
+            <button type="button" class="key-btn" onclick="pressSingleNumKey('0')">0</button>
+          </div>
+          <div class="tenkey-actions">
+            <button type="button" class="btn-clear" onclick="clearSingleNumKey()">けす</button>
+            <button type="button" class="btn-submit-key" onclick="submitSingleNumKey()">けってい</button>
+            <button type="button" class="btn-pass" onclick="passSingleQuestion()">こたえを 見る</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ③-B 連続暗唱画面（「とおし」専用UI ※「きこえたことば」表示は完全非表示） -->
+    <section id="screen-tooshi" class="screen">
+      <div class="card">
+        <div class="practice-header">
+          <span id="tooshi-title-label">4のだん（とおし）</span>
+          <button type="button" class="btn-back-top" onclick="goStep1Dan()">やめて もどる</button>
+        </div>
+
+        <!-- 自動マイク稼働アニメーション表示 -->
+        <div id="tooshi-mic-indicator" class="mic-auto-indicator listening">
+          <div class="mic-waves"><span></span><span></span><span></span></div>
+          <span id="tooshi-mic-text">きいています… こえにだして いってね</span>
+        </div>
+
+        <div id="tooshi-status-msg" class="status-message info" style="margin-bottom:12px;">
+          上から じゅんばんに、つづけて こえに 出して いおう！
+        </div>
+
+        <div id="tooshi-list-container" class="tooshi-list"></div>
+
+        <!-- とおしモード用テンキー（同じ行で2回聞き取れなかった時に自動出現し、入力後また自動マイクONに復帰） -->
+        <div id="tooshi-tenkey-container" class="tenkey-area">
+          <div style="text-align:center;">
+            <button type="button" class="btn-retry-mic" onclick="retryTooshiMicrophone()">
+              🎤 マイクを もういちど つかう
+            </button>
+          </div>
+          <div id="tooshi-tenkey-title" class="tenkey-title">または すうじボタンで こたえてね</div>
+          <div id="tooshi-tenkey-preview" class="tenkey-preview-box">?</div>
+          <div class="tenkey-grid">
+            <button type="button" class="key-btn" onclick="pressTooshiNumKey('1')">1</button>
+            <button type="button" class="key-btn" onclick="pressTooshiNumKey('2')">2</button>
+            <button type="button" class="key-btn" onclick="pressTooshiNumKey('3')">3</button>
+            <button type="button" class="key-btn" onclick="pressTooshiNumKey('4')">4</button>
+            <button type="button" class="key-btn" onclick="pressTooshiNumKey('5')">5</button>
+            <button type="button" class="key-btn" onclick="pressTooshiNumKey('6')">6</button>
+            <button type="button" class="key-btn" onclick="pressTooshiNumKey('7')">7</button>
+            <button type="button" class="key-btn" onclick="pressTooshiNumKey('8')">8</button>
+            <button type="button" class="key-btn" onclick="pressTooshiNumKey('9')">9</button>
+            <button type="button" class="key-btn" onclick="pressTooshiNumKey('0')">0</button>
+          </div>
+          <div class="tenkey-actions">
+            <button type="button" class="btn-clear" onclick="clearTooshiNumKey()">けす</button>
+            <button type="button" class="btn-submit-key" onclick="submitTooshiNumKey()">けってい</button>
+            <button type="button" class="btn-pass" onclick="passTooshiCurrentRow()">こたえを 見る</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ④ 結果画面 -->
+    <section id="screen-result" class="screen">
+      <div class="card">
+        <!-- 合格時バナー（全問正解） -->
+        <div id="result-pass-box" class="result-pass-banner" style="display:none;">
+          <h2 class="result-pass-title">💮 ごうかく！ はなまる 💮</h2>
+          <div class="hanamaru-box">
+            <svg class="hanamaru-svg" viewBox="0 0 200 200">
+              <path
+                d="M100,15 C115,5 135,12 142,28 C158,22 176,35 175,52 C190,60 198,80 188,95 C198,112 190,132 175,140 C176,158 158,170 142,165 C135,180 115,188 100,178 C85,188 65,180 58,165 C42,170 24,158 25,140 C10,132 2,112 12,95 C2,80 10,60 25,52 C24,35 42,22 58,28 C65,12 85,5 100,15 Z"
+                fill="#FEF2F2" stroke="#EF4444" stroke-width="8" />
+              <circle cx="100" cy="98" r="52" fill="none" stroke="#EF4444" stroke-width="8" />
+              <path d="M82,92 C86,75 118,75 118,98 C118,118 85,122 82,102" fill="none" stroke="#EF4444" stroke-width="7"
+                stroke-linecap="round" />
+              <text x="100" y="162" text-anchor="middle" fill="#DC2626" font-size="24"
+                font-weight="900">たいへんよくできました</text>
+            </svg>
+          </div>
+        </div>
+
+        <!-- 不合格時バナー（1問以上まちがい） -->
+        <div id="result-fail-box" class="result-fail-banner" style="display:none;">
+          <h2 id="result-fail-title" class="result-fail-title">おしい！ あと 1 もん！</h2>
+          <p style="font-size:1.3rem; color:#1E3A8A; margin:10px 0 0;">つぎは ぜんもん せいかい めざして がんばろう！</p>
+        </div>
+
+        <div id="result-score-text" class="result-score">9 もんちゅう 9 もん せいかい！</div>
+        <div id="result-wrong-list"
+          style="text-align:center; font-size:1.3rem; color:#B91C1C; font-weight:900; margin-bottom:14px;"></div>
+
+        <div id="save-status-area" class="save-status-box" style="background:#EFF6FF; color:#1D4ED8;">
+          きろくを おくっています…
+        </div>
+        <div style="text-align:center;">
+          <button id="btn-retry-save" type="button" class="btn-retry-send" style="display:none;"
+            onclick="sendResultToServer()">
+            もういちど きろくを おくる
+          </button>
+        </div>
+
+        <div style="margin-top:22px; display:flex; gap:14px; justify-content:center; flex-wrap:wrap;">
+          <button type="button" class="btn-primary-large" style="max-width:360px;" onclick="goStep1Dan()">
+            だん えらび に もどる
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    /**************************************************************
+     * 1. 九九の全81問マスタデータ（KUKU_MASTER）
+     *    ※ 2 × 8 = 16 の qRead は正しい「には」に修正済み
+     **************************************************************/
+    const KUKU_MASTER = {
+      1: [
+        { a: 1, b: 1, ans: 1, qRead: "いんいち が", aRead: "いち" },
+        { a: 1, b: 2, ans: 2, qRead: "いんに が", aRead: "に" },
+        { a: 1, b: 3, ans: 3, qRead: "いんさん が", aRead: "さん" },
+        { a: 1, b: 4, ans: 4, qRead: "いんし が", aRead: "し" },
+        { a: 1, b: 5, ans: 5, qRead: "いんご が", aRead: "ご" },
+        { a: 1, b: 6, ans: 6, qRead: "いんろく が", aRead: "ろく" },
+        { a: 1, b: 7, ans: 7, qRead: "いんしち が", aRead: "しち" },
+        { a: 1, b: 8, ans: 8, qRead: "いんはち が", aRead: "はち" },
+        { a: 1, b: 9, ans: 9, qRead: "いんく が", aRead: "く" }
+      ],
+      2: [
+        { a: 2, b: 1, ans: 2, qRead: "にいち が", aRead: "に" },
+        { a: 2, b: 2, ans: 4, qRead: "ににん が", aRead: "し" },
+        { a: 2, b: 3, ans: 6, qRead: "にさん が", aRead: "ろく" },
+        { a: 2, b: 4, ans: 8, qRead: "にし が", aRead: "はち" },
+        { a: 2, b: 5, ans: 10, qRead: "にご", aRead: "じゅう" },
+        { a: 2, b: 6, ans: 12, qRead: "にろく", aRead: "じゅうに" },
+        { a: 2, b: 7, ans: 14, qRead: "にしち", aRead: "じゅうし" },
+        { a: 2, b: 8, ans: 16, qRead: "には", aRead: "じゅうろく" },
+        { a: 2, b: 9, ans: 18, qRead: "にく", aRead: "じゅうはち" }
+      ],
+      3: [
+        { a: 3, b: 1, ans: 3, qRead: "さんいち が", aRead: "さん" },
+        { a: 3, b: 2, ans: 6, qRead: "さんに が", aRead: "ろく" },
+        { a: 3, b: 3, ans: 9, qRead: "さざん が", aRead: "きゅう" },
+        { a: 3, b: 4, ans: 12, qRead: "さんし", aRead: "じゅうに" },
+        { a: 3, b: 5, ans: 15, qRead: "さんご", aRead: "じゅうご" },
+        { a: 3, b: 6, ans: 18, qRead: "さぶろく", aRead: "じゅうはち" },
+        { a: 3, b: 7, ans: 21, qRead: "さんしち", aRead: "にじゅういち" },
+        { a: 3, b: 8, ans: 24, qRead: "さんぱ", aRead: "にじゅうし" },
+        { a: 3, b: 9, ans: 27, qRead: "さんく", aRead: "にじゅうしち" }
+      ],
+      4: [
+        { a: 4, b: 1, ans: 4, qRead: "しいち が", aRead: "し" },
+        { a: 4, b: 2, ans: 8, qRead: "しに が", aRead: "はち" },
+        { a: 4, b: 3, ans: 12, qRead: "しさん", aRead: "じゅうに" },
+        { a: 4, b: 4, ans: 16, qRead: "しし", aRead: "じゅうろく" },
+        { a: 4, b: 5, ans: 20, qRead: "しご", aRead: "にじゅう" },
+        { a: 4, b: 6, ans: 24, qRead: "しろく", aRead: "にじゅうし" },
+        { a: 4, b: 7, ans: 28, qRead: "ししち", aRead: "にじゅうはち" },
+        { a: 4, b: 8, ans: 32, qRead: "しは", aRead: "さんじゅうに" },
+        { a: 4, b: 9, ans: 36, qRead: "しく", aRead: "さんじゅうろく" }
+      ],
+      5: [
+        { a: 5, b: 1, ans: 5, qRead: "ごいち が", aRead: "ご" },
+        { a: 5, b: 2, ans: 10, qRead: "ごに", aRead: "じゅう" },
+        { a: 5, b: 3, ans: 15, qRead: "ごさん", aRead: "じゅうご" },
+        { a: 5, b: 4, ans: 20, qRead: "ごし", aRead: "にじゅう" },
+        { a: 5, b: 5, ans: 25, qRead: "ごご", aRead: "にじゅうご" },
+        { a: 5, b: 6, ans: 30, qRead: "ごろく", aRead: "さんじゅう" },
+        { a: 5, b: 7, ans: 35, qRead: "ごしち", aRead: "さんじゅうご" },
+        { a: 5, b: 8, ans: 40, qRead: "ごは", aRead: "しじゅう" },
+        { a: 5, b: 9, ans: 45, qRead: "ごっく", aRead: "しじゅうご" }
+      ],
+      6: [
+        { a: 6, b: 1, ans: 6, qRead: "ろくいち が", aRead: "ろく" },
+        { a: 6, b: 2, ans: 12, qRead: "ろくに", aRead: "じゅうに" },
+        { a: 6, b: 3, ans: 18, qRead: "ろくさん", aRead: "じゅうはち" },
+        { a: 6, b: 4, ans: 24, qRead: "ろくし", aRead: "にじゅうし" },
+        { a: 6, b: 5, ans: 30, qRead: "ろくご", aRead: "さんじゅう" },
+        { a: 6, b: 6, ans: 36, qRead: "ろくろく", aRead: "さんじゅうろく" },
+        { a: 6, b: 7, ans: 42, qRead: "ろくしち", aRead: "しじゅうに" },
+        { a: 6, b: 8, ans: 48, qRead: "ろくは", aRead: "しじゅうはち" },
+        { a: 6, b: 9, ans: 54, qRead: "ろっく", aRead: "ごじゅうし" }
+      ],
+      7: [
+        { a: 7, b: 1, ans: 7, qRead: "しちいち が", aRead: "しち" },
+        { a: 7, b: 2, ans: 14, qRead: "しちに", aRead: "じゅうし" },
+        { a: 7, b: 3, ans: 21, qRead: "しちさん", aRead: "にじゅういち" },
+        { a: 7, b: 4, ans: 28, qRead: "しちし", aRead: "にじゅうはち" },
+        { a: 7, b: 5, ans: 35, qRead: "しちご", aRead: "さんじゅうご" },
+        { a: 7, b: 6, ans: 42, qRead: "しちろく", aRead: "しじゅうに" },
+        { a: 7, b: 7, ans: 49, qRead: "しちしち", aRead: "しじゅうく" },
+        { a: 7, b: 8, ans: 56, qRead: "しちは", aRead: "ごじゅうろく" },
+        { a: 7, b: 9, ans: 63, qRead: "しちく", aRead: "ろくじゅうさん" }
+      ],
+      8: [
+        { a: 8, b: 1, ans: 8, qRead: "はちいち が", aRead: "はち" },
+        { a: 8, b: 2, ans: 16, qRead: "はちに", aRead: "じゅうろく" },
+        { a: 8, b: 3, ans: 24, qRead: "はちさん", aRead: "にじゅうし" },
+        { a: 8, b: 4, ans: 32, qRead: "はちし", aRead: "さんじゅうに" },
+        { a: 8, b: 5, ans: 40, qRead: "はちご", aRead: "しじゅう" },
+        { a: 8, b: 6, ans: 48, qRead: "はちろく", aRead: "しじゅうはち" },
+        { a: 8, b: 7, ans: 56, qRead: "はちしち", aRead: "ごじゅうろく" },
+        { a: 8, b: 8, ans: 64, qRead: "はっぱ", aRead: "ろくじゅうし" },
+        { a: 8, b: 9, ans: 72, qRead: "はっく", aRead: "しちじゅうに" }
+      ],
+      9: [
+        { a: 9, b: 1, ans: 9, qRead: "くいち が", aRead: "く" },
+        { a: 9, b: 2, ans: 18, qRead: "くに", aRead: "じゅうはち" },
+        { a: 9, b: 3, ans: 27, qRead: "くさん", aRead: "にじゅうしち" },
+        { a: 9, b: 4, ans: 36, qRead: "くし", aRead: "さんじゅうろく" },
+        { a: 9, b: 5, ans: 45, qRead: "くご", aRead: "しじゅうご" },
+        { a: 9, b: 6, ans: 54, qRead: "くろく", aRead: "ごじゅうし" },
+        { a: 9, b: 7, ans: 63, qRead: "くしち", aRead: "ろくじゅうさん" },
+        { a: 9, b: 8, ans: 72, qRead: "くは", aRead: "しちじゅうに" },
+        { a: 9, b: 9, ans: 81, qRead: "くく", aRead: "はちじゅういち" }
+      ]
+    };
+
+    const MODE_KEY_MAP = {
+      'じゅんばん': 'junban',
+      'ぎゃく': 'gyaku',
+      'ばらばら': 'barabara',
+      'とおし': 'tooshi'
+    };
+
+    const state = {
+      studentNumber: null,
+      // 各段(1〜9)ごとの4モード合格状況 { 1: { junban: false, gyaku: false, barabara: false, tooshi: false }, ... }
+      progress: {},
+      // 苦手な問題リスト ['2x8', '7x6', ...]
+      weakList: [],
+      selectedDan: 2,
+      selectedMode: 'じゅんばん',
+      showYomigana: true,
+      questions: [],
+      currentIndex: 0,
+      voiceMistakeCount: 0,
+      tenkeyMode: false,
+      typedNumber: '',
+      correctCount: 0,
+      wrongQuestions: [], // ['2×8=16', ...]
+      wrongKeys: [],      // ['2x8', ...]
+      correctKeys: [],    // ['2x1', ...]
+      isQuestionLocked: false,
+      pendingPayload: null,
+      // 連続暗唱（「とおし」）モード用
+      tooshiActive: false,
+      tooshiIndex: 0,
+      tooshiMistakeCount: 0,
+      tooshiTenkeyMode: false,
+      tooshiTypedNumber: '',
+      tooshiRowResults: []
+    };
+
+    function createEmptyDanProgress() {
+      return { junban: false, gyaku: false, barabara: false, tooshi: false };
+    }
+
+    function ensureProgressInitialized() {
+      for (let d = 1; d <= 9; d++) {
+        if (!state.progress[d]) {
+          state.progress[d] = createEmptyDanProgress();
+        } else {
+          state.progress[d] = {
+            junban: Boolean(state.progress[d].junban),
+            gyaku: Boolean(state.progress[d].gyaku),
+            barabara: Boolean(state.progress[d].barabara),
+            tooshi: Boolean(state.progress[d].tooshi)
+          };
+        }
+      }
+      if (!Array.isArray(state.weakList)) {
+        state.weakList = [];
+      }
+    }
+
+    /**
+     * サーバーから受け取った progress を既存の state.progress に降格なしでマージする
+     */
+    function mergeServerProgress(serverProgress) {
+      ensureProgressInitialized();
+      if (!serverProgress) return;
+      for (let d = 1; d <= 9; d++) {
+        const sp = serverProgress[d] || {};
+        const cur = state.progress[d] || createEmptyDanProgress();
+        state.progress[d] = {
+          junban: Boolean(cur.junban || sp.junban),
+          gyaku: Boolean(cur.gyaku || sp.gyaku),
+          barabara: Boolean(cur.barabara || sp.barabara),
+          tooshi: Boolean(cur.tooshi || sp.tooshi)
+        };
+      }
+    }
+
+    function getDanProgressObj(dan) {
+      ensureProgressInitialized();
+      return state.progress[dan] || createEmptyDanProgress();
+    }
+
+    function isModeCleared(dan, modeName) {
+      const p = getDanProgressObj(dan);
+      const key = MODE_KEY_MAP[modeName];
+      return key ? Boolean(p[key]) : false;
+    }
+
+    function markModeClearedLocally(dan, modeName) {
+      ensureProgressInitialized();
+      const key = MODE_KEY_MAP[modeName];
+      if (key && state.progress[dan]) {
+        state.progress[dan][key] = true;
+      }
+    }
+
+    /**
+     * ローカルの苦手リストを即時更新（正解した問題は克服削除、間違えた問題は追加）
+     */
+    function updateLocalWeakList(correctKeys, wrongKeys) {
+      const correctSet = new Set(correctKeys || []);
+      const wrongSet = new Set(wrongKeys || []);
+
+      const nextList = [];
+      const seen = new Set();
+
+      for (const k of state.weakList) {
+        if (correctSet.has(k) && !wrongSet.has(k)) {
+          continue; // 克服したので削除
+        }
+        if (!seen.has(k)) {
+          seen.add(k);
+          nextList.push(k);
+        }
+      }
+
+      for (const wk of (wrongKeys || [])) {
+        if (!seen.has(wk)) {
+          seen.add(wk);
+          nextList.push(wk);
+        }
+      }
+
+      state.weakList = nextList;
+    }
+
+    /**************************************************************
+     * 2. 音声認識の2段階正規化・数字結合バグ完全吸収ロジック
+     *    ※ 2×8=16 は「には じゅうろく」「にはち じゅうろく」両方OK
+     **************************************************************/
+
+    const DIGIT_PATTERNS = {
+      1: ['1', 'いち', '一', '位置', '市'],
+      2: ['2', 'に', '二', '荷', '似', '仁'],
+      3: ['3', 'さん', '三', '山', '産'],
+      4: ['4', 'し', 'よん', 'よ', '四', '死', '詩', '市', '氏', '獅子'],
+      5: ['5', 'ご', '五', '語', '碁', '後'],
+      6: ['6', 'ろく', '六', '録', '緑'],
+      7: ['7', 'しち', 'なな', '七', '質', '七つ'],
+      8: ['8', 'はち', 'は', 'ぱ', '八', '蜂', '鉢', '葉', '歯'],
+      9: ['9', 'く', 'きゅう', '九', '苦', '球', '区', '句']
+    };
+
+    const TENS_PREFIX = {
+      1: ['じゅう', '十', '重', '住', '獣', '中', '自由', '銃'],
+      2: ['にじゅう', '二十', '二重'],
+      3: ['さんじゅう', '三十', '三重'],
+      4: ['しじゅう', 'よんじゅう', 'よじゅう', '四十', '四重', '始終'],
+      5: ['ごじゅう', '五十', '五重'],
+      6: ['ろくじゅう', '六十', '六重'],
+      7: ['しちじゅう', 'ななじゅう', '七十', '七重'],
+      8: ['はちじゅう', '八十', '八重']
+    };
+
+    const SPECIAL_NUMBER_SYNONYMS = {
+      10: ['10', 'じゅう', '十', '重', '銃', '住', '自由', '獣'],
+      12: ['12', 'じゅうに', '主に', '自由に', '十二'],
+      14: ['14', 'じゅうし', 'じゅうよん', '重視', '獣医師', '十四'],
+      15: ['15', 'じゅうご', '十五', '銃後'],
+      16: ['16', 'じゅうろく', '重録', '十六'],
+      18: ['18', 'じゅうはち', '十八', '十八番'],
+      20: ['20', 'にじゅう', '二十', '二重'],
+      21: ['21', 'にじゅういち', '二十一'],
+      24: ['24', 'にじゅうし', 'にじゅうよん', '二十四'],
+      25: ['25', 'にじゅうご', '二十五'],
+      27: ['27', 'にじゅうしち', 'にじゅうなな', '二十七'],
+      28: ['28', 'にじゅうはち', '二十八'],
+      30: ['30', 'さんじゅう', '三十', '三重'],
+      32: ['32', 'さんじゅうに', '三十二'],
+      35: ['35', 'さんじゅうご', '三十五'],
+      36: ['36', 'さんじゅうろく', '三十六'],
+      40: ['40', 'しじゅう', 'よんじゅう', 'よじゅう', '四十', '始終'],
+      42: ['42', 'しじゅうに', 'よんじゅうに', '四十二'],
+      45: ['45', 'しじゅうご', 'よんじゅうご', '四十五'],
+      48: ['48', 'しじゅうはち', 'よんじゅうはち', '四十八'],
+      49: ['49', 'しじゅうく', 'しじゅうきゅう', 'よんじゅうく', 'よんじゅうきゅう', 'しちじゅうく', '四十九', '始終苦'],
+      54: ['54', 'ごじゅうし', 'ごじゅうよん', '五十四'],
+      56: ['56', 'ごじゅうろく', '五十六'],
+      63: ['63', 'ろくじゅうさん', '六十三'],
+      64: ['64', 'ろくじゅうし', 'ろくじゅうよん', '六十四'],
+      72: ['72', 'しちじゅうに', 'ななじゅうに', '七十二'],
+      81: ['81', 'はちじゅういち', '八十一']
+    };
+
+    const FORMULA_COMBO_WHITELIST = {
+      '2x5': ['じゅう', '10', '十', 'に50', '250', '二五十', '2510', 'にごじゅう', '銃', '自由', '獣'],
+      '2x8': ['じゅうろく', '16', '十六', 'にはじゅうろく', 'にはちじゅうろく', 'には16', 'にはち16', '2816', '286', 'に86'],
+      '3x5': ['じゅうご', '15', '十五', '355', 'さん55', '3515', 'さんごじゅうご'],
+      '4x5': ['にじゅう', '20', '二十', '4520', 'しご20', '死後20', 'しごにじゅう', '450', 'し50'],
+      '5x5': ['にじゅうご', '25', '二十五', '5525', 'ごご25', '午後25', 'ごごにじゅうご'],
+      '6x5': ['さんじゅう', '30', '三十', '6530', 'ろくご30', 'ろくごさんじゅう'],
+      '7x5': ['さんじゅうご', '35', '三十五', '7535', 'しちご35', 'しちごさんじゅうご'],
+      '8x5': ['しじゅう', 'よんじゅう', '40', '四十', '8540', 'はちご40', '始終', 'はちごしじゅう'],
+      '9x5': ['しじゅうご', 'よんじゅうご', '45', '四十五', '9545', 'くご45', 'くごしじゅうご']
+    };
+
+    function intToStandardHiragana(n) {
+      if (n === 0) return 'ぜろ';
+      const onesMap = ['', 'いち', 'に', 'さん', 'よん', 'ご', 'ろく', 'なな', 'はち', 'きゅう'];
+      const onesKukuMap = ['', 'いち', 'に', 'さん', 'し', 'ご', 'ろく', 'しち', 'はち', 'く'];
+
+      function convertUnder100(val, useKuku) {
+        const oMap = useKuku ? onesKukuMap : onesMap;
+        if (val < 10) return oMap[val];
+        const t = Math.floor(val / 10);
+        const o = val % 10;
+        const tPrefix = (t === 1) ? 'じゅう' : (oMap[t] + 'じゅう');
+        return tPrefix + (o > 0 ? oMap[o] : '');
+      }
+
+      function convertFull(val, useKuku) {
+        const oMap = useKuku ? onesKukuMap : onesMap;
+        let res = '';
+        if (val >= 1000) {
+          const th = Math.floor(val / 1000);
+          res += (th === 1 ? 'せん' : oMap[th] + 'せん');
+          val %= 1000;
+        }
+        if (val >= 100) {
+          const h = Math.floor(val / 100);
+          if (h === 1) res += 'ひゃく';
+          else if (h === 3) res += 'さんびゃく';
+          else if (h === 6) res += 'ろっぴゃく';
+          else if (h === 8) res += 'はっぴゃく';
+          else res += oMap[h] + 'ひゃく';
+          val %= 100;
+        }
+        if (val > 0) {
+          res += convertUnder100(val, useKuku);
+        }
+        return res;
+      }
+
+      return {
+        std: convertFull(n, false),
+        kuku: convertFull(n, true)
+      };
+    }
+
+    function expandNumbersToHiragana(rawText) {
+      if (!rawText) return '';
+      let s = String(rawText).trim();
+
+      s = s.replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0));
+      s = s.replace(/[\u30a1-\u30f6]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60));
+      s = s.replace(/[\s　、。！？!?・×*＝=ー\-]/g, '');
+
+      const wordReplacements = [
+        ['死後', 'しご'],
+        ['午後', 'ごご'],
+        ['始終', 'しじゅう'],
+        ['獅子', 'しし'],
+        ['位置', 'いち'],
+        ['主に', 'じゅうに'],
+        ['重視', 'じゅうし'],
+        ['獣医師', 'じゅうし'],
+        ['重録', 'じゅうろく'],
+        ['自由', 'じゅう'],
+        ['銃後', 'じゅうご'],
+        ['十八番', 'じゅうはち']
+      ];
+      for (const [k, v] of wordReplacements) {
+        s = s.split(k).join(v);
+      }
+
+      const kanjiDigitMap = {
+        '一': 'いち', '二': 'に', '三': 'さん', '四': 'し', '五': 'ご',
+        '六': 'ろく', '七': 'しち', '八': 'はち', '九': 'く',
+        '十': 'じゅう', '百': 'ひゃく', '千': 'せん'
+      };
+      let kanjiExpanded = s.replace(/[一二三四五六七八九十百千]+/g, match => {
+        return match.split('').map(ch => kanjiDigitMap[ch] || ch).join('');
+      });
+
+      const digitKuku = { '0': 'ぜろ', '1': 'いち', '2': 'に', '3': 'さん', '4': 'し', '5': 'ご', '6': 'ろく', '7': 'しち', '8': 'はち', '9': 'く' };
+
+      const expandedStd = kanjiExpanded.replace(/\d+/g, numStr => {
+        const n = parseInt(numStr, 10);
+        if (isNaN(n)) return numStr;
+        return intToStandardHiragana(n).kuku;
+      });
+
+      const expandedStdYon = kanjiExpanded.replace(/\d+/g, numStr => {
+        const n = parseInt(numStr, 10);
+        if (isNaN(n)) return numStr;
+        return intToStandardHiragana(n).std;
+      });
+
+      const expandedDecomposed = kanjiExpanded.replace(/\d+/g, numStr => {
+        if (numStr.length === 3) {
+          const d1 = digitKuku[numStr[0]] || '';
+          const rem2 = parseInt(numStr.slice(1), 10);
+          const rem2Hira = intToStandardHiragana(rem2).kuku;
+          const eachDigit = numStr.split('').map(c => digitKuku[c] || c).join('');
+          return d1 + rem2Hira + '|' + eachDigit;
+        }
+        if (numStr.length === 4) {
+          const d1 = digitKuku[numStr[0]] || '';
+          const d2 = digitKuku[numStr[1]] || '';
+          const rem2 = parseInt(numStr.slice(2), 10);
+          const rem2Hira = intToStandardHiragana(rem2).kuku;
+          return d1 + d2 + rem2Hira;
+        }
+        const n = parseInt(numStr, 10);
+        return isNaN(n) ? numStr : intToStandardHiragana(n).kuku;
+      });
+
+      const singleKanjiReplacements = [
+        ['死', 'し'], ['詩', 'し'], ['市', 'し'], ['氏', 'し'],
+        ['荷', 'に'], ['似', 'に'], ['語', 'ご'], ['碁', 'ご'],
+        ['録', 'ろく'], ['質', 'しち'], ['蜂', 'はち'], ['鉢', 'はち'],
+        ['葉', 'は'], ['歯', 'は'],
+        ['苦', 'く'], ['球', 'きゅう'], ['重', 'じゅう'], ['住', 'じゅう'],
+        ['銃', 'じゅう'], ['獣', 'じゅう']
+      ];
+      let homophoneExpanded = expandedStd;
+      for (const [k, v] of singleKanjiReplacements) {
+        homophoneExpanded = homophoneExpanded.split(k).join(v);
+      }
+
+      return [s, kanjiExpanded, expandedStd, expandedStdYon, expandedDecomposed, homophoneExpanded].join('|');
+    }
+
+    function getMasterItem(a, b) {
+      const list = KUKU_MASTER[a] || [];
+      return list.find(item => item.b === b) || { a, b, ans: a * b, qRead: '', aRead: String(a * b) };
+    }
+
+    function getFormulaComboTokens(a, b, ans) {
+      const combos = new Set();
+      const key = `${a}x${b}`;
+
+      if (FORMULA_COMBO_WHITELIST[key]) {
+        FORMULA_COMBO_WHITELIST[key].forEach(w => combos.add(w));
+      }
+
+      combos.add(`${a}${b}${ans}`);
+
+      if (ans >= 10) {
+        const tensDigit = Math.floor(ans / 10);
+        const onesDigit = ans % 10;
+        if (tensDigit === 1) {
+          combos.add(`${a}${b * 10 + onesDigit}`);
+        }
+      }
+
+      const danReadings = DIGIT_PATTERNS[a] || [String(a)];
+      const mulReadings = DIGIT_PATTERNS[b] || [String(b)];
+
+      for (const dr of danReadings) {
+        combos.add(`${dr}${b}${ans}`);
+        if (ans >= 10 && Math.floor(ans / 10) === 1) {
+          combos.add(`${dr}${b * 10 + (ans % 10)}`);
+        }
+        for (const mr of mulReadings) {
+          combos.add(`${dr}${mr}${ans}`);
+          combos.add(`${dr}${mr}が${ans}`);
+        }
+      }
+
+      const masterItem = getMasterItem(a, b);
+      const qReadClean = masterItem.qRead.replace(/\s+/g, '');
+      const aReadClean = masterItem.aRead.replace(/\s+/g, '');
+      if (qReadClean) {
+        combos.add(`${qReadClean}${ans}`);
+        if (aReadClean) {
+          combos.add(`${qReadClean}${aReadClean}`);
+        }
+      }
+
+      // 2×8=16 のとき「には じゅうろく」と「にはち じゅうろく」の両方を確実に許容
+      if (a === 2 && b === 8) {
+        combos.add('にはじゅうろく');
+        combos.add('にはちじゅうろく');
+        combos.add('には16');
+        combos.add('にはち16');
+      }
+
+      return Array.from(combos);
+    }
+
+    function getAnswerTokens(ans, aReadFromMaster) {
+      const tokens = new Set([String(ans)]);
+      if (aReadFromMaster) {
+        tokens.add(aReadFromMaster.replace(/\s+/g, ''));
+      }
+
+      if (ans <= 9 && DIGIT_PATTERNS[ans]) {
+        DIGIT_PATTERNS[ans].forEach(t => tokens.add(t));
+      }
+
+      if (SPECIAL_NUMBER_SYNONYMS[ans]) {
+        SPECIAL_NUMBER_SYNONYMS[ans].forEach(t => tokens.add(t));
+      }
+
+      if (ans >= 10) {
+        const tens = Math.floor(ans / 10);
+        const ones = ans % 10;
+        const tensList = TENS_PREFIX[tens] || [];
+        if (ones === 0) {
+          tensList.forEach(tp => tokens.add(tp));
+        } else {
+          const onesList = DIGIT_PATTERNS[ones] || [];
+          tensList.forEach(tp => {
+            onesList.forEach(op => {
+              tokens.add(tp + op);
+            });
+          });
+        }
+      }
+
+      return Array.from(tokens);
+    }
+
+    function isSingleSpeechCorrect(transcripts, qItem) {
+      const a = qItem.a;
+      const b = qItem.b;
+      const ans = qItem.ans;
+      const answerTokens = getAnswerTokens(ans, qItem.aRead);
+      const comboTokens = getFormulaComboTokens(a, b, ans);
+      const ansStr = String(ans);
+
+      for (const raw of transcripts) {
+        if (!raw) continue;
+        const expandedAll = expandNumbersToHiragana(raw);
+        const variants = expandedAll.split('|');
+
+        for (const ct of comboTokens) {
+          if (!ct) continue;
+          if (variants.some(v => v && v.includes(ct))) {
+            return true;
+          }
+        }
+
+        for (const norm of variants) {
+          if (!norm) continue;
+          if (norm === ansStr || norm.endsWith(ansStr)) {
+            return true;
+          }
+          for (const token of answerTokens) {
+            if (!token) continue;
+            if (norm.includes(token)) {
+              return true;
+            }
+          }
+        }
+      }
+      return false;
+    }
+
+    function checkTooshiStreamAdvance(rawStream, qItem) {
+      if (!rawStream) return { matched: false, endPos: 0 };
+
+      const a = qItem.a;
+      const b = qItem.b;
+      const ans = qItem.ans;
+      const expandedAll = expandNumbersToHiragana(rawStream);
+      const variants = expandedAll.split('|');
+      const comboTokens = getFormulaComboTokens(a, b, ans);
+      const targetTokens = getAnswerTokens(ans, qItem.aRead);
+
+      for (const ct of comboTokens) {
+        if (!ct) continue;
+        for (const v of variants) {
+          const idx = v.indexOf(ct);
+          if (idx !== -1) {
+            return { matched: true, endPos: idx + ct.length };
+          }
+        }
+      }
+
+      for (const v of variants) {
+        if (!v) continue;
+        for (const token of targetTokens) {
+          const idx = v.indexOf(token);
+          if (idx !== -1) {
+            if (b === 1 && ans === a && ['し', 'よん', 'いち', 'に', 'さん', 'ご', 'ろく', 'しち', 'はち', 'く'].includes(token)) {
+              const secondIdx = v.indexOf(token, idx + token.length);
+              if (secondIdx !== -1) {
+                return { matched: true, endPos: secondIdx + token.length };
+              }
+              if (v.includes('が' + token) || v === token || v.includes(String(ans))) {
+                return { matched: true, endPos: idx + token.length };
+              }
+              continue;
+            }
+            return { matched: true, endPos: idx + token.length };
+          }
+        }
+      }
+
+      return { matched: false, endPos: 0 };
+    }
+
+    /**************************************************************
+     * 3. 画面初期化＆1画面1選択の3ステップ遷移（4つすべてクリアで金色）
+     **************************************************************/
+    // 外部ホスティング（GitHub Pages / Netlify / localhost等）からGASへ接続する場合のデフォルトURL
+    // ※ここにデプロイしたGASの「ウェブアプリURL（https://script.google.com/macros/s/.../exec）」を貼り付けておくと設定不要で全員つながります
+    const DEFAULT_GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyr1JzRbs38DuTJT6DOeCnbb1q26HV8Ig9MrbVF59NDTWTGo6bgQS4eTxKY4kowEvw2/exec";
+
+    function getActiveGasUrl() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const paramUrl = params.get('gas');
+        if (paramUrl && paramUrl.startsWith('https://script.google.com/')) {
+          localStorage.setItem('kuku_gas_webapp_url', paramUrl.trim());
+          return paramUrl.trim();
+        }
+        const saved = localStorage.getItem('kuku_gas_webapp_url');
+        if (saved && saved.startsWith('https://script.google.com/')) {
+          return saved.trim();
+        }
+      } catch (e) { }
+      return DEFAULT_GAS_WEB_APP_URL.trim();
+    }
+
+    function getSpeechRecognitionCtor() {
+      if (window.SpeechRecognition || window.webkitSpeechRecognition) {
+        return window.SpeechRecognition || window.webkitSpeechRecognition;
+      }
+      try {
+        if (window.parent && window.parent !== window) {
+          return window.parent.SpeechRecognition || window.parent.webkitSpeechRecognition || null;
+        }
+      } catch (e) { }
+      return null;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      ensureProgressInitialized();
+      renderLoginGrid();
+      renderDanGrid();
+    });
+
+    function showScreen(screenId) {
+      stopAllVoiceRecognition();
+      if (screenId !== 'screen-result') {
+        stopConfetti();
+      }
+      document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+
+      const topBar = document.getElementById('top-user-bar');
+      if (screenId === 'screen-login' || !state.studentNumber) {
+        topBar.style.display = 'none';
+      } else {
+        topBar.style.display = 'flex';
+        document.getElementById('header-student-num').textContent = state.studentNumber;
+      }
+    }
+
+    function renderLoginGrid() {
+      const grid = document.getElementById('login-number-grid');
+      grid.innerHTML = '';
+      for (let i = 1; i <= 40; i++) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'num-btn';
+        btn.textContent = i;
+        btn.onclick = () => {
+          state.studentNumber = i;
+          document.querySelectorAll('#login-number-grid .num-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          const startBtn = document.getElementById('btn-login-start');
+          startBtn.disabled = false;
+          startBtn.textContent = `${i}ばん で はじめる`;
+        };
+        grid.appendChild(btn);
+      }
+    }
+
+    // 出席番号ごとの端末内キャッシュ保存・復元（通信混雑・一時オフライン時でも合格状況を保護）
+    function saveLocalStudentCache(studentNo, progressObj, weakArr) {
+      if (!studentNo) return;
+      try {
+        localStorage.setItem('kuku_cache_v3_' + studentNo, JSON.stringify({
+          progress: progressObj,
+          weakList: Array.isArray(weakArr) ? weakArr : []
+        }));
+      } catch (e) { }
+    }
+
+    function loadLocalStudentCache(studentNo) {
+      if (!studentNo) return null;
+      try {
+        const raw = localStorage.getItem('kuku_cache_v3_' + studentNo);
+        if (raw) return JSON.parse(raw);
+      } catch (e) { }
+      return null;
+    }
+
+    // 30人同時通信時の未送信キュー管理（万一リトライ上限を超えた場合でも次回通信時に自動再送）
+    function enqueueUnsentPayload(payload) {
+      if (!payload) return;
+      try {
+        const raw = localStorage.getItem('kuku_unsent_queue_v3');
+        const queue = raw ? JSON.parse(raw) : [];
+        queue.push(payload);
+        if (queue.length > 30) queue.shift();
+        localStorage.setItem('kuku_unsent_queue_v3', JSON.stringify(queue));
+      } catch (e) { }
+    }
+
+    function flushUnsentQueueInBackground() {
+      try {
+        const raw = localStorage.getItem('kuku_unsent_queue_v3');
+        if (!raw) return;
+        const queue = JSON.parse(raw);
+        if (!Array.isArray(queue) || queue.length === 0) return;
+
+        const item = queue[0];
+        const gasUrl = getActiveGasUrl();
+        if (!gasUrl) return;
+
+        fetch(gasUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'saveResult', payload: item })
+        })
+          .then(r => r.json())
+          .then(json => {
+            if (json && json.ok) {
+              queue.shift();
+              localStorage.setItem('kuku_unsent_queue_v3', JSON.stringify(queue));
+              if (queue.length > 0) {
+                setTimeout(flushUnsentQueueInBackground, 1500 + Math.floor(Math.random() * 1000));
+              }
+            }
+          })
+          .catch(() => { });
+      } catch (e) { }
+    }
+
+    function loginAndLoadProgress() {
+      if (!state.studentNumber) return;
+      const startBtn = document.getElementById('btn-login-start');
+      startBtn.disabled = true;
+      startBtn.textContent = 'よみこみちゅう…';
+
+      state.progress = {};
+      state.weakList = [];
+      ensureProgressInitialized();
+
+      // まず端末内のローカルキャッシュがあれば先に復元（降格なしマージ）
+      const localCached = loadLocalStudentCache(state.studentNumber);
+      if (localCached) {
+        if (localCached.progress) mergeServerProgress(localCached.progress);
+        if (Array.isArray(localCached.weakList)) state.weakList = localCached.weakList;
+      }
+
+      const applyLoadedData = (res) => {
+        startBtn.disabled = false;
+        startBtn.textContent = `${state.studentNumber}ばん で はじめる`;
+        if (res && res.progress) {
+          mergeServerProgress(res.progress);
+        }
+        if (res && Array.isArray(res.weakList)) {
+          state.weakList = res.weakList;
+        }
+        saveLocalStudentCache(state.studentNumber, state.progress, state.weakList);
+        goStep1Dan();
+        // 未送信キューがあれば裏側で静かに再送
+        setTimeout(flushUnsentQueueInBackground, 1200 + Math.floor(Math.random() * 1000));
+      };
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(res => applyLoadedData(res))
+          .withFailureHandler(() => applyLoadedData(null))
+          .getStudentProgress(state.studentNumber);
+        return;
+      }
+
+      const gasUrl = getActiveGasUrl();
+      if (!gasUrl) {
+        applyLoadedData(null);
+        return;
+      }
+
+      // 30人一斉ログイン時のアクセス集中を緩和する微小ランダム分散（0〜400ms）＋自動リトライ（最大3回）
+      const sep = gasUrl.includes('?') ? '&' : '?';
+      const targetUrl = `${gasUrl}${sep}action=getProgress&studentNo=${encodeURIComponent(state.studentNumber)}`;
+
+      const attemptFetchProgress = (attemptIndex) => {
+        fetch(targetUrl)
+          .then(r => r.json())
+          .then(json => {
+            if (json && json.ok && json.data) {
+              applyLoadedData(json.data);
+            } else if (attemptIndex < 2) {
+              setTimeout(() => attemptFetchProgress(attemptIndex + 1), 800 * (attemptIndex + 1) + Math.floor(Math.random() * 500));
+            } else {
+              applyLoadedData(null);
+            }
+          })
+          .catch(() => {
+            if (attemptIndex < 2) {
+              setTimeout(() => attemptFetchProgress(attemptIndex + 1), 800 * (attemptIndex + 1) + Math.floor(Math.random() * 500));
+            } else {
+              applyLoadedData(null);
+            }
+          });
+      };
+
+      const initialJitterMs = Math.floor(Math.random() * 400);
+      setTimeout(() => attemptFetchProgress(0), initialJitterMs);
+    }
+
+    function confirmSwitchStudent() {
+      stopAllVoiceRecognition();
+      state.studentNumber = null;
+      state.progress = {};
+      state.weakList = [];
+      ensureProgressInitialized();
+      document.querySelectorAll('#login-number-grid .num-btn').forEach(b => b.classList.remove('selected'));
+      const startBtn = document.getElementById('btn-login-start');
+      startBtn.disabled = true;
+      startBtn.textContent = 'はじめる';
+      showScreen('screen-login');
+    }
+
+    // ステップ1：段のせんたく画面へ
+    function goStep1Dan() {
+      stopAllVoiceRecognition();
+      renderDanGrid();
+      showScreen('screen-step1-dan');
+    }
+
+    function renderDanGrid() {
+      ensureProgressInitialized();
+      const grid = document.getElementById('dan-select-grid');
+      grid.innerHTML = '';
+
+      let masterDanCount = 0; // 金色（4モード完全合格）になった段の数
+
+      for (let d = 1; d <= 9; d++) {
+        const p = getDanProgressObj(d);
+        const cJunban = Boolean(p.junban);
+        const cGyaku = Boolean(p.gyaku);
+        const cBarabara = Boolean(p.barabara);
+        const cTooshi = Boolean(p.tooshi);
+
+        const danClearedCount =
+          (cJunban ? 1 : 0) +
+          (cGyaku ? 1 : 0) +
+          (cBarabara ? 1 : 0) +
+          (cTooshi ? 1 : 0);
+
+        // 4つすべてクリアしたときだけ完全合格（金色）
+        const isMaster = (danClearedCount === 4);
+        const isPartial = (danClearedCount >= 1 && danClearedCount <= 3);
+
+        if (isMaster) {
+          masterDanCount++;
+        }
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+
+        let btnClass = 'dan-btn';
+        if (isMaster) btnClass += ' dan-master';
+        else if (isPartial) btnClass += ' dan-partial';
+        btn.className = btnClass;
+
+        // 右上のスタンプバッジ（1〜3個クリア＝〇 / ◎、4つすべてクリア＝特大 ★）
+        let cornerBadgeHtml = '';
+        let subStatusHtml = '';
+        if (isMaster) {
+          cornerBadgeHtml = `<div class="dan-corner-stamp stamp-master-badge">★</div>`;
+          subStatusHtml = `<div class="dan-sub-status master">4つ ぜんぶ ごうかく！</div>`;
+        } else if (isPartial) {
+          const badgeChar = danClearedCount >= 2 ? '◎' : '〇';
+          const remain = 4 - danClearedCount;
+          cornerBadgeHtml = `<div class="dan-corner-stamp">${badgeChar}</div>`;
+          subStatusHtml = `<div class="dan-sub-status partial">あと ${remain} こ！</div>`;
+        } else {
+          subStatusHtml = `<div class="dan-sub-status none">ちょうせん しよう！</div>`;
+        }
+
+        // ボタン下部の4つのミニバッジ [じゅんばん][ぎゃく][ばらばら][とおし]
+        const miniBadgesHtml = `
+          <div class="dan-mini-modes">
+            <span class="mini-mode-pill ${cJunban ? 'cleared' : ''}">じゅんばん</span>
+            <span class="mini-mode-pill ${cGyaku ? 'cleared' : ''}">ぎゃく</span>
+            <span class="mini-mode-pill ${cBarabara ? 'cleared' : ''}">ばらばら</span>
+            <span class="mini-mode-pill ${cTooshi ? 'cleared' : ''}">とおし</span>
+          </div>
+        `;
+
+        btn.innerHTML = `
+          ${cornerBadgeHtml}
+          <div class="dan-label">${d}のだん</div>
+          ${subStatusHtml}
+          ${miniBadgesHtml}
+        `;
+
+        btn.onclick = () => {
+          state.selectedDan = d;
+          goStep2Mode();
+        };
+        grid.appendChild(btn);
+      }
+
+      // 特別モード①：「にがて とっくん」ボタンの状態更新
+      const nigateBtn = document.getElementById('btn-special-nigate');
+      const nigateSub = document.getElementById('nigate-btn-sub');
+      const weakCount = state.weakList.length;
+      if (weakCount > 0) {
+        nigateBtn.disabled = false;
+        nigateSub.textContent = `にがてな もんだい ${weakCount}こ に ちょうせん！`;
+      } else {
+        nigateBtn.disabled = true;
+        nigateSub.textContent = 'にがてな もんだいは 0こ です！';
+      }
+
+      // 特別モード②：「ぜんぶ ばらばら」ボタンのロック／アンロック更新
+      const zenbuBtn = document.getElementById('btn-special-zenbu');
+      const zenbuTitle = document.getElementById('zenbu-btn-title');
+      const zenbuSub = document.getElementById('zenbu-btn-sub');
+      const allNineMaster = (masterDanCount === 9);
+
+      if (allNineMaster) {
+        zenbuBtn.disabled = false;
+        zenbuTitle.textContent = '👑 ぜんぶ ばらばら';
+        zenbuSub.textContent = '1〜9のだん から 20もん ちょうせん！';
+      } else {
+        zenbuBtn.disabled = true;
+        zenbuTitle.textContent = '🔒 ぜんぶ ばらばら';
+        zenbuSub.textContent = 'ぜんぶ 金色に すると あそべるよ！';
+      }
+    }
+
+    /**
+     * 特別モード（にがて とっくん ／ ぜんぶ ばらばら）を選んだときは
+     * ステップ2（やり方のせんたく）をスキップしてステップ3（よみがな あり/なし）へ直行する
+     */
+    function selectSpecialMode(specialModeName) {
+      stopAllVoiceRecognition();
+
+      if (specialModeName === 'にがて とっくん') {
+        if (!state.weakList || state.weakList.length === 0) return;
+        state.selectedDan = 'にがて';
+        state.selectedMode = 'にがて とっくん';
+        document.getElementById('step3-summary-badge').textContent = 'にがて とっくん';
+        showScreen('screen-step3-yomi');
+      } else if (specialModeName === 'ぜんぶ ばらばら') {
+        state.selectedDan = 'ぜんぶ';
+        state.selectedMode = 'ぜんぶ ばらばら';
+        document.getElementById('step3-summary-badge').textContent = 'ぜんぶ ばらばら（20もん）';
+        showScreen('screen-step3-yomi');
+      }
+    }
+
+    // ステップ2：やり方のせんたく画面へ（「ごうかく！」／「ちょうせん！」バッジ表示）
+    function goStep2Mode() {
+      stopAllVoiceRecognition();
+      const dan = state.selectedDan;
+      document.getElementById('step2-dan-badge').textContent = `${dan}のだん`;
+
+      const modesInfo = [
+        { mode: 'じゅんばん', desc: '×1 から ×9 まで じゅんばんに こたえる' },
+        { mode: 'ぎゃく', desc: '×9 から ×1 まで ぎゃくから こたえる' },
+        { mode: 'ばらばら', desc: 'ばらばらの じゅんばんで こたえる' },
+        { mode: 'とおし', desc: '×1 から ×9 まで つづけて こえに 出して いう' }
+      ];
+
+      const grid = document.getElementById('mode-select-grid');
+      grid.innerHTML = '';
+
+      modesInfo.forEach(m => {
+        const cleared = isModeCleared(dan, m.mode);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'mode-btn' + (cleared ? ' mode-cleared' : '');
+
+        const badgeHtml = cleared
+          ? `<span class="mode-status-badge passed">💮 ごうかく！</span>`
+          : `<span class="mode-status-badge challenge">ちょうせん！</span>`;
+
+        btn.innerHTML = `
+          ${badgeHtml}
+          <div class="mode-title">${m.mode}</div>
+          <div class="mode-desc">${m.desc}</div>
+        `;
+        btn.onclick = () => {
+          chooseModeAndGoStep3(m.mode);
+        };
+        grid.appendChild(btn);
+      });
+
+      showScreen('screen-step2-mode');
+    }
+
+    function chooseModeAndGoStep3(mode) {
+      state.selectedMode = mode;
+      document.getElementById('step3-summary-badge').textContent = `${state.selectedDan}のだん（${state.selectedMode}）`;
+      showScreen('screen-step3-yomi');
+    }
+
+    function goBackFromStep3() {
+      if (state.selectedMode === 'にがて とっくん' || state.selectedMode === 'ぜんぶ ばらばら') {
+        goStep1Dan();
+      } else {
+        goStep2Mode();
+      }
+    }
+
+    function chooseYomiganaAndStart(enableYomigana) {
+      state.showYomigana = Boolean(enableYomigana);
+      startPractice();
+    }
+
+    /**************************************************************
+     * 4. 練習スタート＆KUKU_MASTERからの問題生成
+     *    - 通常モード（9問）
+     *    - にがて とっくん（苦手リストから最大10問）
+     *    - ぜんぶ ばらばら（全81問からランダム20問）
+     **************************************************************/
+    function shuffleArray(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function startPractice() {
+      const dan = state.selectedDan;
+      const mode = state.selectedMode;
+
+      state.correctCount = 0;
+      state.wrongQuestions = [];
+      state.wrongKeys = [];
+      state.correctKeys = [];
+      state.currentIndex = 0;
+
+      let list = [];
+
+      if (mode === 'にがて とっくん') {
+        const weakItems = [];
+        for (const key of state.weakList) {
+          const m = String(key).match(/^([1-9])x([1-9])$/);
+          if (m) {
+            const a = parseInt(m[1], 10);
+            const b = parseInt(m[2], 10);
+            weakItems.push(Object.assign({}, getMasterItem(a, b)));
+          }
+        }
+        shuffleArray(weakItems);
+        list = weakItems.slice(0, 10);
+        if (list.length === 0) {
+          goStep1Dan();
+          return;
+        }
+      } else if (mode === 'ぜんぶ ばらばら') {
+        const all81 = [];
+        for (let d = 1; d <= 9; d++) {
+          (KUKU_MASTER[d] || []).forEach(item => {
+            all81.push(Object.assign({}, item));
+          });
+        }
+        shuffleArray(all81);
+        list = all81.slice(0, 20);
+      } else {
+        list = (KUKU_MASTER[dan] || []).map(item => Object.assign({}, item));
+        if (mode === 'ぎゃく') {
+          list.reverse();
+        } else if (mode === 'ばらばら') {
+          shuffleArray(list);
+        }
+      }
+
+      state.questions = list;
+
+      if (mode === 'とおし') {
+        showScreen('screen-tooshi');
+        initTooshiScreen();
+      } else {
+        showScreen('screen-single');
+        loadSingleQuestion();
+      }
+    }
+
+    /**************************************************************
+     * 5. 視覚フィードバック演出＆紙吹雪（完全無音）
+     **************************************************************/
+    function showVisualFeedback(type, durationMs = 850) {
+      const overlay = document.getElementById('feedback-overlay');
+      overlay.innerHTML = '';
+      if (type === 'maru') {
+        const div = document.createElement('div');
+        div.className = 'big-maru';
+        overlay.appendChild(div);
+      } else if (type === 'batsu') {
+        const div = document.createElement('div');
+        div.className = 'big-batsu';
+        div.textContent = '✖';
+        overlay.appendChild(div);
+      }
+      overlay.style.display = 'flex';
+      setTimeout(() => {
+        overlay.style.display = 'none';
+        overlay.innerHTML = '';
+      }, durationMs);
+    }
+
+    function startConfetti() {
+      const container = document.getElementById('confetti-container');
+      container.innerHTML = '';
+      container.style.display = 'block';
+      const colors = ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#EC4899', '#FDE047'];
+      for (let i = 0; i < 48; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        piece.style.left = `${Math.random() * 100}%`;
+        piece.style.backgroundColor = colors[i % colors.length];
+        piece.style.animationDuration = `${2.2 + Math.random() * 2.3}s`;
+        piece.style.animationDelay = `${Math.random() * 0.8}s`;
+        container.appendChild(piece);
+      }
+    }
+
+    function stopConfetti() {
+      const container = document.getElementById('confetti-container');
+      container.style.display = 'none';
+      container.innerHTML = '';
+    }
+
+    /**************************************************************
+     * 6. ③-A 1問ずつ答えるモード（自動マイクON ＆ 2回失敗でテンキー出現）
+     *    ※ 認識テキスト（「きこえたことば」）の画面表示は完全非表示
+     **************************************************************/
+    let singleRecognition = null;
+    let singleMicTimer = null;
+
+    function loadSingleQuestion() {
+      stopAllVoiceRecognition();
+      state.isQuestionLocked = false;
+      state.voiceMistakeCount = 0;
+      state.tenkeyMode = false;
+      state.typedNumber = '';
+
+      const q = state.questions[state.currentIndex];
+      const totalQ = state.questions.length;
+
+      if (state.selectedMode === 'にがて とっくん' || state.selectedMode === 'ぜんぶ ばらばら') {
+        document.getElementById('single-mode-label').textContent = state.selectedMode;
+      } else {
+        document.getElementById('single-mode-label').textContent = `${q.a}のだん（${state.selectedMode}）`;
+      }
+      document.getElementById('single-progress-label').textContent = `${state.currentIndex + 1} / ${totalQ} もんめ`;
+
+      const yomiEl = document.getElementById('q-yomigana');
+      if (state.showYomigana) {
+        yomiEl.style.display = 'block';
+        yomiEl.textContent = q.qRead;
+      } else {
+        yomiEl.style.display = 'none';
+      }
+
+      document.getElementById('q-dan').textContent = q.a;
+      document.getElementById('q-mul').textContent = q.b;
+      const slot = document.getElementById('q-ans-slot');
+      slot.textContent = '?';
+      slot.style.color = '#2563EB';
+
+      document.getElementById('single-tenkey-container').style.display = 'none';
+      document.getElementById('btn-single-next').style.display = 'none';
+
+      const msgEl = document.getElementById('single-status-msg');
+      msgEl.className = 'status-message info';
+      msgEl.textContent = 'こえに 出して こたえてね';
+
+      startSingleVoiceAuto();
+    }
+
+    function updateSingleMicIndicator(isListening, text) {
+      const ind = document.getElementById('single-mic-indicator');
+      const txt = document.getElementById('single-mic-text');
+      if (isListening) {
+        ind.classList.add('listening');
+        ind.classList.remove('off');
+      } else {
+        ind.classList.remove('listening');
+        ind.classList.add('off');
+      }
+      txt.textContent = text;
+    }
+
+    function startSingleVoiceAuto() {
+      if (state.isQuestionLocked || state.tenkeyMode) return;
+
+      const SpeechRecognition = getSpeechRecognitionCtor();
+      if (!SpeechRecognition) {
+        switchToSingleTenkeyMode('このブラウザは マイクに たいおう していません');
+        return;
+      }
+
+      if (singleRecognition) {
+        try {
+          singleRecognition.onstart = null;
+          singleRecognition.onresult = null;
+          singleRecognition.onend = null;
+          singleRecognition.onerror = null;
+          singleRecognition.abort();
+        } catch (e) { }
+        singleRecognition = null;
+      }
+      if (singleMicTimer) {
+        clearTimeout(singleMicTimer);
+        singleMicTimer = null;
+      }
+
+      const q = state.questions[state.currentIndex];
+      singleRecognition = new SpeechRecognition();
+      singleRecognition.lang = 'ja-JP';
+      singleRecognition.continuous = false;
+      singleRecognition.interimResults = true;
+      singleRecognition.maxAlternatives = 5;
+
+      let handled = false;
+      let latestTranscripts = [];
+
+      updateSingleMicIndicator(true, 'きいています… こえにだして いってね');
+
+      // マイクが実際に開いた瞬間（onstart）から4.5秒タイマーを開始する（許可ダイアログ待ちで切れるのを防ぐ）
+      singleRecognition.onstart = () => {
+        if (singleMicTimer) clearTimeout(singleMicTimer);
+        singleMicTimer = setTimeout(() => {
+          if (singleRecognition && !handled) {
+            try { singleRecognition.stop(); } catch (e) { }
+          }
+        }, 4500);
+      };
+
+      singleRecognition.onresult = (event) => {
+        if (handled || state.isQuestionLocked || state.tenkeyMode) return;
+
+        const candidates = [];
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          for (let j = 0; j < event.results[i].length; j++) {
+            candidates.push(event.results[i][j].transcript);
+          }
+        }
+        latestTranscripts = candidates;
+
+        if (isSingleSpeechCorrect(candidates, q)) {
+          handled = true;
+          stopAllVoiceRecognition();
+          handleSingleCorrect();
+        } else if (event.results[event.results.length - 1].isFinal) {
+          handled = true;
+          stopAllVoiceRecognition();
+          handleSingleVoiceFailure();
+        }
+      };
+
+      singleRecognition.onerror = (event) => {
+        if (handled || state.isQuestionLocked || state.tenkeyMode) return;
+        handled = true;
+        stopAllVoiceRecognition();
+
+        if (event && (event.error === 'not-allowed' || event.error === 'service-not-allowed' || event.error === 'audio-capture')) {
+          const isGasIframe = (window.self !== window.top);
+          const reasonMsg = isGasIframe
+            ? 'GASのセキュリティ制限でマイクがブロックされました（すうじボタンで こたえてね）'
+            : 'マイクが つかえません（「マイクを もういちど つかう」または すうじボタンを おしてね）';
+          switchToSingleTenkeyMode(reasonMsg);
+          return;
+        }
+        handleSingleVoiceFailure();
+      };
+
+      singleRecognition.onend = () => {
+        if (handled || state.isQuestionLocked || state.tenkeyMode) return;
+        handled = true;
+        if (latestTranscripts.length > 0 && isSingleSpeechCorrect(latestTranscripts, q)) {
+          stopAllVoiceRecognition();
+          handleSingleCorrect();
+        } else {
+          stopAllVoiceRecognition();
+          handleSingleVoiceFailure();
+        }
+      };
+
+      try {
+        singleRecognition.start();
+      } catch (e) {
+        switchToSingleTenkeyMode();
+      }
+    }
+
+    function retrySingleMicrophone() {
+      if (state.isQuestionLocked) return;
+      state.tenkeyMode = false;
+      state.voiceMistakeCount = 0;
+      document.getElementById('single-tenkey-container').style.display = 'none';
+
+      const msgEl = document.getElementById('single-status-msg');
+      msgEl.className = 'status-message info';
+      msgEl.textContent = 'こえに 出して こたえてね';
+
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ audio: true })
+          .then(stream => {
+            stream.getTracks().forEach(t => t.stop());
+            startSingleVoiceAuto();
+          })
+          .catch(() => {
+            startSingleVoiceAuto();
+          });
+      } else {
+        startSingleVoiceAuto();
+      }
+    }
+
+    function handleSingleVoiceFailure() {
+      if (state.isQuestionLocked || state.tenkeyMode) return;
+
+      state.voiceMistakeCount++;
+      const msgEl = document.getElementById('single-status-msg');
+
+      if (state.voiceMistakeCount === 1) {
+        msgEl.className = 'status-message retry';
+        msgEl.textContent = 'もういちど いってね（あと1かい）';
+        setTimeout(() => {
+          if (!state.isQuestionLocked && !state.tenkeyMode) {
+            startSingleVoiceAuto();
+          }
+        }, 250);
+      } else {
+        switchToSingleTenkeyMode();
+      }
+    }
+
+    function switchToSingleTenkeyMode(customStatusText) {
+      stopAllVoiceRecognition();
+      state.tenkeyMode = true;
+
+      updateSingleMicIndicator(false, 'マイクを とめました（すうじボタンで こたえてね）');
+
+      const msgEl = document.getElementById('single-status-msg');
+      msgEl.className = 'status-message retry';
+      msgEl.textContent = customStatusText || 'すうじボタンで こたえてね';
+
+      document.getElementById('single-tenkey-container').style.display = 'block';
+    }
+
+    function handleSingleCorrect() {
+      if (state.isQuestionLocked) return;
+      state.isQuestionLocked = true;
+      state.correctCount++;
+
+      const q = state.questions[state.currentIndex];
+      state.correctKeys.push(`${q.a}x${q.b}`);
+
+      updateSingleMicIndicator(false, 'せいかい！');
+
+      const slot = document.getElementById('q-ans-slot');
+      slot.textContent = q.ans;
+      slot.style.color = '#EF4444';
+
+      const msgEl = document.getElementById('single-status-msg');
+      msgEl.className = 'status-message info';
+      msgEl.textContent = 'せいかい！ すごい！';
+
+      showVisualFeedback('maru', 900);
+
+      setTimeout(() => {
+        goNextSingleQuestion();
+      }, 1000);
+    }
+
+    function handleSingleWrong() {
+      if (state.isQuestionLocked) return;
+      state.isQuestionLocked = true;
+
+      updateSingleMicIndicator(false, 'こたえを かくにん しよう');
+
+      const q = state.questions[state.currentIndex];
+      state.wrongQuestions.push(`${q.a}×${q.b}=${q.ans}`);
+      state.wrongKeys.push(`${q.a}x${q.b}`);
+
+      const slot = document.getElementById('q-ans-slot');
+      slot.textContent = q.ans;
+      slot.style.color = '#DC2626';
+
+      const msgEl = document.getElementById('single-status-msg');
+      msgEl.className = 'status-message wrong';
+      msgEl.textContent = `✖ こたえは ${q.ans}（${q.aRead}） です`;
+
+      showVisualFeedback('batsu', 900);
+
+      document.getElementById('single-tenkey-container').style.display = 'none';
+      document.getElementById('btn-single-next').style.display = 'block';
+    }
+
+    function passSingleQuestion() {
+      stopAllVoiceRecognition();
+      handleSingleWrong();
+    }
+
+    function goNextSingleQuestion() {
+      state.currentIndex++;
+      if (state.currentIndex >= state.questions.length) {
+        finishPractice();
+      } else {
+        loadSingleQuestion();
+      }
+    }
+
+    function pressSingleNumKey(digit) {
+      if (state.isQuestionLocked) return;
+      if (state.typedNumber.length >= 2) return;
+      state.typedNumber += digit;
+      document.getElementById('q-ans-slot').textContent = state.typedNumber;
+    }
+
+    function clearSingleNumKey() {
+      if (state.isQuestionLocked) return;
+      state.typedNumber = '';
+      document.getElementById('q-ans-slot').textContent = '?';
+    }
+
+    function submitSingleNumKey() {
+      if (state.isQuestionLocked) return;
+      if (state.typedNumber === '') return;
+
+      stopAllVoiceRecognition();
+      const q = state.questions[state.currentIndex];
+      const userVal = parseInt(state.typedNumber, 10);
+      if (userVal === q.ans) {
+        handleSingleCorrect();
+      } else {
+        handleSingleWrong();
+      }
+    }
+
+    /**************************************************************
+     * 7. ③-B 連続暗唱モード（「とおし」専用UI）
+     *    - 「きこえたことば」表示は完全非表示
+     *    - 2回聞き取り失敗でテンキー切り替え＆回答後また自動マイクONへ復帰
+     **************************************************************/
+    let tooshiRecognition = null;
+    let tooshiRowTimer = null;
+
+    function initTooshiScreen() {
+      stopAllVoiceRecognition();
+      state.tooshiActive = false;
+      state.tooshiIndex = 0;
+      state.tooshiMistakeCount = 0;
+      state.tooshiTenkeyMode = false;
+      state.tooshiTypedNumber = '';
+      state.tooshiRowResults = new Array(9).fill(null);
+
+      const dan = state.selectedDan;
+      document.getElementById('tooshi-title-label').textContent = `${dan}のだん（とおし）`;
+      document.getElementById('tooshi-tenkey-container').style.display = 'none';
+
+      renderTooshiChecklist();
+      startTooshiVoiceForCurrentRow();
+    }
+
+    function updateTooshiMicIndicator(isListening, text) {
+      const ind = document.getElementById('tooshi-mic-indicator');
+      const txt = document.getElementById('tooshi-mic-text');
+      if (isListening) {
+        ind.classList.add('listening');
+        ind.classList.remove('off');
+      } else {
+        ind.classList.remove('listening');
+        ind.classList.add('off');
+      }
+      txt.textContent = text;
+    }
+
+    function renderTooshiChecklist() {
+      const container = document.getElementById('tooshi-list-container');
+      container.innerHTML = '';
+
+      state.questions.forEach((q, idx) => {
+        const isDone = idx < state.tooshiIndex;
+        const isCurrent = idx === state.tooshiIndex;
+        const rowRes = state.tooshiRowResults[idx];
+
+        let rowClass = 'tooshi-row';
+        if (isCurrent) rowClass += ' current';
+        else if (isDone) rowClass += (rowRes === 'wrong' ? ' wrong-done' : ' done');
+
+        const row = document.createElement('div');
+        row.className = rowClass;
+
+        let ansDisplay = '?';
+        if (isDone) {
+          const color = rowRes === 'wrong' ? '#2563EB' : '#EF4444';
+          ansDisplay = `<span style="color:${color};">${q.ans}</span>`;
+        } else if (isCurrent && state.tooshiTenkeyMode && state.tooshiTypedNumber !== '') {
+          ansDisplay = `<span style="color:#2563EB;">${state.tooshiTypedNumber}</span>`;
+        }
+
+        const yomiHtml = state.showYomigana
+          ? `<span class="tooshi-yomi">（${q.qRead}）</span>`
+          : '';
+
+        let rightHtml = '';
+        if (isDone) {
+          if (rowRes === 'wrong') {
+            rightHtml = `<span class="tooshi-mark" style="color:#2563EB;">✖</span>`;
+          } else {
+            rightHtml = `<span class="tooshi-mark">〇</span>`;
+          }
+        } else if (isCurrent) {
+          rightHtml = `<span class="tooshi-guide-badge">いま ここを いってね</span>`;
+        } else {
+          rightHtml = `<span class="tooshi-mark" style="color:#CBD5E1;">・</span>`;
+        }
+
+        row.innerHTML = `
+          <div class="tooshi-left">
+            <span class="tooshi-formula">${q.a} × ${q.b} = ${ansDisplay}</span>
+            ${yomiHtml}
+          </div>
+          <div class="tooshi-right">${rightHtml}</div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function clearTooshiRowTimer() {
+      if (tooshiRowTimer) {
+        clearTimeout(tooshiRowTimer);
+        tooshiRowTimer = null;
+      }
+    }
+
+    function resetTooshiRowWatchdog() {
+      clearTooshiRowTimer();
+      if (!state.tooshiActive || state.tooshiTenkeyMode || state.tooshiIndex >= 9) return;
+      tooshiRowTimer = setTimeout(() => {
+        if (state.tooshiActive && !state.tooshiTenkeyMode && state.tooshiIndex < 9) {
+          handleTooshiRowVoiceFailure();
+        }
+      }, 5000);
+    }
+
+    function startTooshiVoiceForCurrentRow() {
+      if (state.tooshiIndex >= 9) return;
+
+      state.tooshiTenkeyMode = false;
+      state.tooshiTypedNumber = '';
+      document.getElementById('tooshi-tenkey-container').style.display = 'none';
+      renderTooshiChecklist();
+
+      const SpeechRecognition = getSpeechRecognitionCtor();
+      if (!SpeechRecognition) {
+        switchToTooshiTenkeyMode('このブラウザは マイクに たいおう していません');
+        return;
+      }
+
+      state.tooshiActive = true;
+      updateTooshiMicIndicator(true, 'きいています… こえにだして いってね');
+
+      const msgEl = document.getElementById('tooshi-status-msg');
+      if (state.tooshiMistakeCount === 0) {
+        msgEl.className = 'status-message info';
+        msgEl.textContent = '上から じゅんばんに、つづけて こえに 出して いおう！';
+      }
+
+      launchContinuousRecognitionInstance();
+    }
+
+    function retryTooshiMicrophone() {
+      if (state.tooshiIndex >= 9) return;
+      state.tooshiMistakeCount = 0;
+
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ audio: true })
+          .then(stream => {
+            stream.getTracks().forEach(t => t.stop());
+            startTooshiVoiceForCurrentRow();
+          })
+          .catch(() => {
+            startTooshiVoiceForCurrentRow();
+          });
+      } else {
+        startTooshiVoiceForCurrentRow();
+      }
+    }
+
+    function launchContinuousRecognitionInstance() {
+      if (!state.tooshiActive || state.tooshiTenkeyMode || state.tooshiIndex >= 9) return;
+
+      if (tooshiRecognition) {
+        try {
+          tooshiRecognition.onstart = null;
+          tooshiRecognition.onresult = null;
+          tooshiRecognition.onend = null;
+          tooshiRecognition.onerror = null;
+          tooshiRecognition.abort();
+        } catch (e) { }
+        tooshiRecognition = null;
+      }
+
+      const SpeechRecognition = getSpeechRecognitionCtor();
+      tooshiRecognition = new SpeechRecognition();
+      tooshiRecognition.lang = 'ja-JP';
+      tooshiRecognition.continuous = true;
+      tooshiRecognition.interimResults = true;
+      tooshiRecognition.maxAlternatives = 3;
+
+      let consumedCursor = 0;
+
+      tooshiRecognition.onstart = () => {
+        resetTooshiRowWatchdog();
+      };
+
+      tooshiRecognition.onresult = (event) => {
+        if (!state.tooshiActive || state.tooshiTenkeyMode || state.tooshiIndex >= 9) return;
+
+        let fullTranscript = '';
+        let altTranscript = '';
+        for (let i = 0; i < event.results.length; i++) {
+          fullTranscript += event.results[i][0].transcript;
+          if (event.results[i].length > 1) {
+            altTranscript += event.results[i][1].transcript;
+          } else {
+            altTranscript += event.results[i][0].transcript;
+          }
+        }
+
+        let matchedAny = false;
+        let loopGuard = 0;
+        while (state.tooshiIndex < 9 && loopGuard < 9) {
+          loopGuard++;
+          const unconsumedPrimary = fullTranscript.slice(consumedCursor);
+          const unconsumedAlt = altTranscript.slice(consumedCursor);
+          const q = state.questions[state.tooshiIndex];
+
+          const resPrimary = checkTooshiStreamAdvance(unconsumedPrimary, q);
+          const resAlt = !resPrimary.matched
+            ? checkTooshiStreamAdvance(unconsumedAlt, q)
+            : { matched: false };
+
+          if (resPrimary.matched || resAlt.matched) {
+            matchedAny = true;
+            consumedCursor = Math.max(consumedCursor + 1, fullTranscript.length - 1);
+            advanceTooshiRowAsCorrect();
+          } else {
+            break;
+          }
+        }
+
+        const lastResult = event.results[event.results.length - 1];
+        if (!matchedAny && lastResult && lastResult.isFinal && state.tooshiIndex < 9) {
+          consumedCursor = fullTranscript.length;
+          handleTooshiRowVoiceFailure();
+        }
+      };
+
+      tooshiRecognition.onerror = (event) => {
+        if (!state.tooshiActive || state.tooshiTenkeyMode || state.tooshiIndex >= 9) return;
+        if (event && (event.error === 'not-allowed' || event.error === 'service-not-allowed' || event.error === 'audio-capture')) {
+          const isGasIframe = (window.self !== window.top);
+          const reasonMsg = isGasIframe
+            ? 'GASのセキュリティ制限でマイクがブロックされました（すうじボタンで こたえてね）'
+            : 'マイクが つかえません（「マイクを もういちど つかう」または すうじボタンを おしてね）';
+          switchToTooshiTenkeyMode(reasonMsg);
+        }
+      };
+
+      tooshiRecognition.onend = () => {
+        if (state.tooshiActive && !state.tooshiTenkeyMode && state.tooshiIndex < 9) {
+          setTimeout(() => {
+            if (state.tooshiActive && !state.tooshiTenkeyMode && state.tooshiIndex < 9) {
+              try {
+                launchContinuousRecognitionInstance();
+              } catch (e) { }
+            }
+          }, 150);
+        }
+      };
+
+      try {
+        tooshiRecognition.start();
+      } catch (e) {
+        switchToTooshiTenkeyMode();
+      }
+    }
+
+    function handleTooshiRowVoiceFailure() {
+      if (state.tooshiTenkeyMode || state.tooshiIndex >= 9) return;
+
+      state.tooshiMistakeCount++;
+      const msgEl = document.getElementById('tooshi-status-msg');
+
+      if (state.tooshiMistakeCount === 1) {
+        msgEl.className = 'status-message retry';
+        msgEl.textContent = 'もういちど いってね（あと1かい）';
+        resetTooshiRowWatchdog();
+      } else {
+        switchToTooshiTenkeyMode();
+      }
+    }
+
+    function switchToTooshiTenkeyMode(customStatusText) {
+      stopAllVoiceRecognition();
+      state.tooshiTenkeyMode = true;
+      state.tooshiTypedNumber = '';
+
+      updateTooshiMicIndicator(false, 'マイクを とめました（すうじボタンで こたえてね）');
+
+      const q = state.questions[state.tooshiIndex];
+      const msgEl = document.getElementById('tooshi-status-msg');
+      msgEl.className = 'status-message retry';
+      msgEl.textContent = customStatusText || 'すうじボタンで こたえてね';
+
+      document.getElementById('tooshi-tenkey-title').textContent =
+        `${q.a} × ${q.b} の こたえを すうじボタンで いれてね`;
+      document.getElementById('tooshi-tenkey-preview').textContent = '?';
+      document.getElementById('tooshi-tenkey-container').style.display = 'block';
+      renderTooshiChecklist();
+    }
+
+    function pressTooshiNumKey(digit) {
+      if (!state.tooshiTenkeyMode || state.tooshiIndex >= 9) return;
+      if (state.tooshiTypedNumber.length >= 2) return;
+      state.tooshiTypedNumber += digit;
+      document.getElementById('tooshi-tenkey-preview').textContent = state.tooshiTypedNumber;
+      renderTooshiChecklist();
+    }
+
+    function clearTooshiNumKey() {
+      if (!state.tooshiTenkeyMode || state.tooshiIndex >= 9) return;
+      state.tooshiTypedNumber = '';
+      document.getElementById('tooshi-tenkey-preview').textContent = '?';
+      renderTooshiChecklist();
+    }
+
+    function submitTooshiNumKey() {
+      if (!state.tooshiTenkeyMode || state.tooshiIndex >= 9) return;
+      if (state.tooshiTypedNumber === '') return;
+
+      const q = state.questions[state.tooshiIndex];
+      const userVal = parseInt(state.tooshiTypedNumber, 10);
+
+      if (userVal === q.ans) {
+        showVisualFeedback('maru', 650);
+        advanceTooshiRowAsCorrect(true);
+      } else {
+        advanceTooshiRowAsWrong(q);
+      }
+    }
+
+    function passTooshiCurrentRow() {
+      if (state.tooshiIndex >= 9) return;
+      const q = state.questions[state.tooshiIndex];
+      advanceTooshiRowAsWrong(q);
+    }
+
+    function advanceTooshiRowAsCorrect(fromTenkey = false) {
+      if (state.tooshiIndex >= 9) return;
+
+      const q = state.questions[state.tooshiIndex];
+      state.correctKeys.push(`${q.a}x${q.b}`);
+
+      state.tooshiRowResults[state.tooshiIndex] = 'correct';
+      state.correctCount++;
+      state.tooshiIndex++;
+      state.tooshiMistakeCount = 0;
+
+      if (state.tooshiIndex >= 9) {
+        stopAllVoiceRecognition();
+        renderTooshiChecklist();
+        showVisualFeedback('maru', 900);
+        setTimeout(() => {
+          finishPractice();
+        }, 950);
+        return;
+      }
+
+      const msgEl = document.getElementById('tooshi-status-msg');
+      msgEl.className = 'status-message info';
+      msgEl.textContent = 'せいかい！ つぎの しき を こえに 出して いってね';
+
+      if (fromTenkey || state.tooshiTenkeyMode) {
+        startTooshiVoiceForCurrentRow();
+      } else {
+        renderTooshiChecklist();
+        resetTooshiRowWatchdog();
+      }
+    }
+
+    function advanceTooshiRowAsWrong(q) {
+      if (state.tooshiIndex >= 9) return;
+
+      state.tooshiRowResults[state.tooshiIndex] = 'wrong';
+      state.wrongQuestions.push(`${q.a}×${q.b}=${q.ans}`);
+      state.wrongKeys.push(`${q.a}x${q.b}`);
+      state.tooshiIndex++;
+      state.tooshiMistakeCount = 0;
+
+      showVisualFeedback('batsu', 750);
+
+      const msgEl = document.getElementById('tooshi-status-msg');
+      msgEl.className = 'status-message wrong';
+      msgEl.textContent = `✖ ${q.a}×${q.b} の こたえは ${q.ans}（${q.aRead}） です。つぎを こえで いおう！`;
+
+      if (state.tooshiIndex >= 9) {
+        stopAllVoiceRecognition();
+        document.getElementById('tooshi-tenkey-container').style.display = 'none';
+        renderTooshiChecklist();
+        setTimeout(() => {
+          finishPractice();
+        }, 1100);
+        return;
+      }
+
+      startTooshiVoiceForCurrentRow();
+    }
+
+    function stopAllVoiceRecognition() {
+      state.tooshiActive = false;
+      if (singleMicTimer) {
+        clearTimeout(singleMicTimer);
+        singleMicTimer = null;
+      }
+      clearTooshiRowTimer();
+      if (singleRecognition) {
+        try {
+          singleRecognition.onstart = null;
+          singleRecognition.onresult = null;
+          singleRecognition.onend = null;
+          singleRecognition.onerror = null;
+          singleRecognition.abort();
+        } catch (e) { }
+        singleRecognition = null;
+      }
+      if (tooshiRecognition) {
+        try {
+          tooshiRecognition.onstart = null;
+          tooshiRecognition.onresult = null;
+          tooshiRecognition.onend = null;
+          tooshiRecognition.onerror = null;
+          tooshiRecognition.abort();
+        } catch (e) { }
+        tooshiRecognition = null;
+      }
+    }
+
+    /**************************************************************
+     * 8. ④ 結果画面とスプレッドシートへの一括送信・再送機能
+     **************************************************************/
+    function finishPractice() {
+      stopAllVoiceRecognition();
+      showScreen('screen-result');
+
+      const totalQ = state.questions.length;
+      const isPerfect = (state.correctCount === totalQ && state.wrongQuestions.length === 0 && totalQ > 0);
+      const passBox = document.getElementById('result-pass-box');
+      const failBox = document.getElementById('result-fail-box');
+      const failTitle = document.getElementById('result-fail-title');
+      const scoreEl = document.getElementById('result-score-text');
+      const wrongListEl = document.getElementById('result-wrong-list');
+
+      // ローカル苦手リストの即時更新（正解した問題は克服削除、間違えた問題は追加）
+      updateLocalWeakList(state.correctKeys, state.wrongKeys);
+
+      if (isPerfect) {
+        if (typeof state.selectedDan === 'number' && state.selectedDan >= 1 && state.selectedDan <= 9) {
+          markModeClearedLocally(state.selectedDan, state.selectedMode);
+        }
+        passBox.style.display = 'block';
+        failBox.style.display = 'none';
+        scoreEl.textContent = `${totalQ} もんちゅう ${totalQ} もん せいかい！`;
+        wrongListEl.textContent = '';
+        startConfetti();
+      } else {
+        stopConfetti();
+        passBox.style.display = 'none';
+        failBox.style.display = 'block';
+        const remaining = Math.max(1, totalQ - state.correctCount);
+        failTitle.textContent = `おしい！ あと ${remaining} もん！`;
+        scoreEl.textContent = `${totalQ} もんちゅう ${state.correctCount} もん せいかい`;
+        wrongListEl.textContent = state.wrongQuestions.length > 0
+          ? 'まちがえた もんだい： ' + state.wrongQuestions.join(' , ')
+          : '';
+      }
+
+      state.pendingPayload = {
+        studentNumber: state.studentNumber,
+        dan: state.selectedDan,
+        mode: state.selectedMode,
+        correctCount: state.correctCount,
+        totalQuestions: totalQ,
+        wrongQuestions: state.wrongQuestions,
+        wrongKeys: state.wrongKeys,
+        correctKeys: state.correctKeys
+      };
+
+      // 端末内のキャッシュも即座に更新して保護
+      saveLocalStudentCache(state.studentNumber, state.progress, state.weakList);
+
+      sendResultToServer();
+    }
+
+    function sendResultToServer() {
+      if (!state.pendingPayload) return;
+
+      const statusArea = document.getElementById('save-status-area');
+      const retryBtn = document.getElementById('btn-retry-save');
+
+      statusArea.style.background = '#EFF6FF';
+      statusArea.style.color = '#1D4ED8';
+      statusArea.textContent = '先生の ひょう に きろくを おくっています…';
+      retryBtn.style.display = 'none';
+
+      const payloadToSend = state.pendingPayload;
+
+      const onSuccessSave = (res) => {
+        state.pendingPayload = null;
+        if (res && res.progress) {
+          mergeServerProgress(res.progress);
+        }
+        if (res && Array.isArray(res.weakList)) {
+          state.weakList = res.weakList;
+        }
+        saveLocalStudentCache(state.studentNumber, state.progress, state.weakList);
+        statusArea.style.background = '#DCFCE7';
+        statusArea.style.color = '#15803D';
+        statusArea.textContent = '〇 きろくを おくりました！';
+        retryBtn.style.display = 'none';
+        // 未送信キューが残っていれば裏側で消化
+        setTimeout(flushUnsentQueueInBackground, 1500 + Math.floor(Math.random() * 1000));
+      };
+
+      const onFinalFailSave = () => {
+        enqueueUnsentPayload(payloadToSend);
+        statusArea.style.background = '#FEE2E2';
+        statusArea.style.color = '#B91C1C';
+        statusArea.textContent = 'きろくが うまく おくれませんでした。下の ボタンを おしてね。';
+        retryBtn.style.display = 'inline-block';
+      };
+
+      // GAS内部実行時（google.script.run）も自動リトライ対応
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        const tryGasRun = (attempt) => {
+          google.script.run
+            .withSuccessHandler(res => onSuccessSave(res))
+            .withFailureHandler(() => {
+              if (attempt < 3) {
+                const waitMs = 1500 * (attempt + 1) + Math.floor(Math.random() * 800);
+                setTimeout(() => tryGasRun(attempt + 1), waitMs);
+              } else {
+                onFinalFailSave();
+              }
+            })
+            .savePracticeResult(payloadToSend);
+        };
+        setTimeout(() => tryGasRun(0), Math.floor(Math.random() * 450));
+        return;
+      }
+
+      // Netlify / GitHub Pages / localhost からの送信時（30人同時送信の衝突分散＋最大4回自動リトライ）
+      const gasUrl = getActiveGasUrl();
+      if (gasUrl) {
+        const tryFetchSave = (attempt) => {
+          fetch(gasUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+              action: 'saveResult',
+              payload: payloadToSend
+            })
+          })
+            .then(r => r.json())
+            .then(json => {
+              if (json && json.ok && json.data) {
+                onSuccessSave(json.data);
+              } else if (attempt < 3) {
+                const waitMs = 1500 * (attempt + 1) + Math.floor(Math.random() * 900);
+                setTimeout(() => tryFetchSave(attempt + 1), waitMs);
+              } else {
+                onFinalFailSave();
+              }
+            })
+            .catch(() => {
+              if (attempt < 3) {
+                const waitMs = 1500 * (attempt + 1) + Math.floor(Math.random() * 900);
+                setTimeout(() => tryFetchSave(attempt + 1), waitMs);
+              } else {
+                onFinalFailSave();
+              }
+            });
+        };
+
+        // 0〜500ミリ秒のランダム分散を入れて一斉送信の瞬間的な衝突を回避
+        const initialJitterMs = Math.floor(Math.random() * 500);
+        setTimeout(() => tryFetchSave(0), initialJitterMs);
+      } else {
+        statusArea.style.background = '#DCFCE7';
+        statusArea.style.color = '#15803D';
+        statusArea.textContent = '〇 きろくを おくりました！（テスト表示）';
+      }
+    }
+  </script>
+</body>
+
+</html>
